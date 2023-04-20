@@ -114,7 +114,7 @@ function addNativeAliases(aliases) {
 		knowledge.push({
 			id: `a${index}`,
 			type: 'warning',
-			regex: new RegExp(`(?<=\\b)${alias}(?=\\s*\\()`, 'g'),
+			regex: new RegExp(`(?<=^|[^\\w:])${alias}(?=\\s*\\()`, 'g'),
 			message: `${alias} is deprecated, use ${replacement} instead`,
 			replace: replacement
 		});
