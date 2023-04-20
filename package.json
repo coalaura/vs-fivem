@@ -2,9 +2,15 @@
 	"name": "vs-fivem",
 	"displayName": "vs-fivem",
 	"description": "Adds up-to-date fivem native support.",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"author": "coalaura",
 	"publisher": "coalaura",
+	"icon": "logo.png",
+	"keywords": [
+		"lua",
+		"fivem",
+		"native"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/coalaura/vs-fivem"
