@@ -75,7 +75,7 @@ function activate(context) {
 				item.detail = native.detail;
 				item.documentation = native.description;
 
-				item.sortText = (native.apiset === ctx.ctx ? '' : '~') + native.name;
+				item.sortText = (native.apiset === ctx.ctx ? '~' : '') + native.name;
 
 				let insertText = native.name + '(' + formatParameters(native.params, true) + ')';
 
