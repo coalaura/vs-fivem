@@ -2,6 +2,7 @@ const vscode = require('vscode'),
 	fetch = require('node-fetch');
 
 const { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } = require('./natives.js');
+const { subscribeToDocumentChanges, registerQuickFixHelper } = require('./diagnostics.js');
 
 const natives = [];
 
@@ -48,6 +49,15 @@ function activate(context) {
 		await fetchNatives('https://runtime.fivem.net/doc/natives.json');
 
 		console.log('Fetched ' + natives.length + ' natives.');
+
+		const nativeStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
+
+		const amount = new Intl.NumberFormat('en-US').format(natives.length);
+
+		nativeStatusBar.text = `$(open-editors-view-icon) ${amount}`;
+		nativeStatusBar.tooltip = `Loaded ${amount} natives.`;
+
+		nativeStatusBar.show();
 
 		progress.report({ increment: 100 });
 	});
@@ -104,6 +114,13 @@ function activate(context) {
 			return new vscode.Hover(createNativeDocumentation(native));
 		}
 	});
+
+	const nativeDiagnostics = vscode.languages.createDiagnosticCollection("natives");
+	context.subscriptions.push(nativeDiagnostics);
+
+	subscribeToDocumentChanges(context, nativeDiagnostics);
+
+	registerQuickFixHelper(context);
 
 	context.subscriptions.push(completionDisposable);
 	context.subscriptions.push(hoverDisposable);

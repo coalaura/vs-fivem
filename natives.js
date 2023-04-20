@@ -1,3 +1,5 @@
+const vscode = require('vscode');
+
 const underscoreParts = [
 	'3d',
 	'2d',
@@ -61,7 +63,7 @@ function createNativeDocumentation(native) {
 
 	lines.push('```lua\n' + documentation.join('\n') + '\n```');
 
-	lines.push('```\n' + native.description + '\n```');
+	lines.push(native.description);
 
 	return lines;
 }
@@ -123,8 +125,14 @@ function getFileContext(filename) {
 function formatParameters(params, plain, indent, join) {
 	indent = indent || '';
 
+	const config = vscode.workspace.getConfiguration('vs-fivem');
+
 	return params.map(param => {
-		const name = 'p' + param.name.charAt(0).toUpperCase() + param.name.slice(1);
+		let name = param.name;
+
+		if (config.get('useParameterFormat')) {
+			name = 'p' + name.charAt(0).toUpperCase() + name.slice(1);
+		}
 
 		return indent + name + (plain ? '' : ' --[[ ' + param.type + ' ]]');
 	}).join(join || ', ');

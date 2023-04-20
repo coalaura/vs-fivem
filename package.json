@@ -3,7 +3,12 @@
 	"displayName": "vs-fivem",
 	"description": "Adds up-to-date fivem native support.",
 	"version": "0.0.1",
+	"author": "coalaura",
 	"publisher": "coalaura",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/coalaura/vs-fivem"
+	},
 	"engines": {
 		"vscode": "^1.77.0"
 	},
@@ -15,7 +20,18 @@
 		"onLanguage:lua"
 	],
 	"main": "./extension.js",
-	"contributes": {},
+	"contributes": {
+		"configuration": {
+			"title": "VS-FiveM",
+			"properties": {
+				"vs-fivem.useParameterFormat": {
+					"type": "boolean",
+					"default": false,
+					"description": "Format parameters in the `pParameter` style."
+				}
+			}
+		}
+	},
 	"scripts": {
 		"lint": "eslint .",
 		"pretest": "npm run lint",
