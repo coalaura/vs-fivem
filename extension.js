@@ -6,7 +6,8 @@ const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases } =
 const { updateStatisticsStatus } = require('./statistics.js');
 
 const natives = [],
-	aliases = {};
+	aliases = {},
+	hashes = {};
 
 async function getJSON(url) {
 	const response = await fetch(url);
@@ -38,6 +39,10 @@ async function fetchNatives(url) {
 					aliases[alias] = native.name;
 				});
 			}
+
+			if (native.name !== native.hash) {
+				hashes['N_' + native.hash] = native.name;
+			}
 		}
 	}
 }
@@ -60,7 +65,7 @@ function activate(context) {
 
 		console.log('Fetched ' + natives.length + ' natives.');
 
-		addNativeAliases(aliases);
+		addNativeAliases(aliases, hashes);
 
 		const nativeStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
 

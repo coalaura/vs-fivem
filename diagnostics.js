@@ -105,7 +105,7 @@ function registerQuickFixHelper(context) {
 	);
 }
 
-function addNativeAliases(aliases) {
+function addNativeAliases(aliases, hashes) {
 	let index = 1;
 
 	for (const alias in aliases) {
@@ -116,6 +116,22 @@ function addNativeAliases(aliases) {
 			type: 'warning',
 			regex: new RegExp(`(?<=^|[^\\w:])${alias}(?=\\s*\\()`, 'g'),
 			message: `${alias} is deprecated, use ${replacement} instead`,
+			replace: replacement
+		});
+
+		index++;
+	}
+
+	index = 1;
+
+	for (const hash in hashes) {
+		const replacement = hashes[hash];
+
+		knowledge.push({
+			id: `h${index}`,
+			type: 'warning',
+			regex: new RegExp(`(?<=^|[^\\w:])${hash}(?=\\s*\\()`, 'g'),
+			message: `Use the named native ${replacement} instead of its hash ${hash}`,
 			replace: replacement
 		});
 
