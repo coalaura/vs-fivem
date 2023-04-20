@@ -3,6 +3,7 @@ const vscode = require('vscode'),
 
 const { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } = require('./natives.js');
 const { subscribeToDocumentChanges, registerQuickFixHelper } = require('./diagnostics.js');
+const { updateStatisticsStatus } = require('./statistics.js');
 
 const natives = [];
 
@@ -55,9 +56,13 @@ function activate(context) {
 		const amount = new Intl.NumberFormat('en-US').format(natives.length);
 
 		nativeStatusBar.text = `$(open-editors-view-icon) ${amount}`;
-		nativeStatusBar.tooltip = `Loaded ${amount} natives.`;
+		nativeStatusBar.tooltip = `Loaded ${amount} natives`;
 
 		nativeStatusBar.show();
+
+		const document = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.document : false;
+
+		updateStatisticsStatus(document, natives);
 
 		progress.report({ increment: 100 });
 	});
@@ -115,6 +120,26 @@ function activate(context) {
 		}
 	});
 
+	let changeTextTimeout = null;
+
+	const changeEditorDisposable = vscode.window.onDidChangeActiveTextEditor(editor => {
+		clearTimeout(changeTextTimeout);
+
+		const document = editor ? editor.document : false;
+
+		updateStatisticsStatus(document, natives);
+	});
+
+	const changeTextDisposable = vscode.workspace.onDidChangeTextDocument(event => {
+		clearTimeout(changeTextTimeout);
+
+		const document = event.document;
+
+		changeTextTimeout = setTimeout(() => {
+			updateStatisticsStatus(document, natives);
+		}, 500);
+	});
+
 	const nativeDiagnostics = vscode.languages.createDiagnosticCollection("natives");
 	context.subscriptions.push(nativeDiagnostics);
 
@@ -124,6 +149,8 @@ function activate(context) {
 
 	context.subscriptions.push(completionDisposable);
 	context.subscriptions.push(hoverDisposable);
+	context.subscriptions.push(changeEditorDisposable);
+	context.subscriptions.push(changeTextDisposable);
 }
 
 // This method is called when your extension is deactivated
