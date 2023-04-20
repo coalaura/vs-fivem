@@ -2,7 +2,7 @@
 	"name": "vs-fivem",
 	"displayName": "vs-fivem",
 	"description": "Adds up-to-date fivem native support.",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
@@ -41,7 +41,8 @@
 	"scripts": {
 		"lint": "eslint .",
 		"pretest": "npm run lint",
-		"test": "node ./test/runTest.js"
+		"test": "node ./test/runTest.js",
+		"build": "vsce package"
 	},
 	"devDependencies": {
 		"@types/glob": "^8.1.0",
