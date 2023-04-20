@@ -17,3 +17,8 @@ The extension will try to detect the context of the current file (server or clie
 ![diagnostics](.github/diagnostics.png)
 
 ![replace](.github/replace.png)
+
+### Statistics
+Displays statistics related to the current file in the status bar.
+
+![statistics](.github/statistics.png)
