@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.0.5]
+- Added `vs-fivem.lintFolder` command to lint all files in a folder
+- Added explorer context menu option to lint a folder
+- Improved performance of linting
+- Fixed bug where some natives aliases were the same as their current name
+
 ## [1.0.4]
 - Searching for natives including the search string not only ones that start with it
 

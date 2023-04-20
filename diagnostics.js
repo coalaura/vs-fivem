@@ -1,49 +1,48 @@
+const path = require('path');
 const vscode = require('vscode');
 
 const knowledge = require('./knowledge.js');
 
 function refreshDiagnostics(doc, nativeDiagnostics) {
-	const check = text => {
-		const results = [];
+	const text = doc.getText();
 
-		for (const check of knowledge) {
-			const matches = text.matchAll(check.regex);
+	const results = [];
 
-			for (const match of matches) {
-				results.push({
-					message: check.message.replace('$0', match[0]),
-					start: match.index,
-					end: match.index + match[0].length,
+	for (const check of knowledge) {
+		const matches = text.matchAll(check.regex);
 
-					id: check.id,
-					type: check.type
-				});
-			}
+		for (const match of matches) {
+			const position = doc.positionAt(match.index);
+
+			const start = position.character,
+				end = start + match[0].length;
+
+			results.push({
+				message: check.message.replace('$0', match[0]),
+				start: start,
+				end: end,
+				line: position.line,
+
+				id: check.id,
+				type: check.type
+			});
 		}
-
-		return results;
-	};
+	}
 
 	const diagnostics = [];
 
-	for (let lineIndex = 0; lineIndex < doc.lineCount; lineIndex++) {
-		const lineOfText = doc.lineAt(lineIndex).text;
+	if (results) {
+		results.forEach(r => {
+			const range = new vscode.Range(r.line, r.start, r.line, r.end);
 
-		const results = check(lineOfText);
+			const severity = r.type === 'warning' ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Information;
 
-		if (results) {
-			results.forEach(r => {
-				const range = new vscode.Range(lineIndex, r.start, lineIndex, r.end);
+			const diagnostic = new vscode.Diagnostic(range, r.message, severity);
 
-				const severity = r.type === 'warning' ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Information;
+			diagnostic.code = r.id;
 
-				const diagnostic = new vscode.Diagnostic(range, r.message, severity);
-
-				diagnostic.code = r.id;
-
-				diagnostics.push(diagnostic);
-			});
-		}
+			diagnostics.push(diagnostic);
+		});
 	}
 
 	nativeDiagnostics.set(doc.uri, diagnostics);
@@ -111,6 +110,8 @@ function addNativeAliases(aliases, hashes) {
 	for (const alias in aliases) {
 		const replacement = aliases[alias];
 
+		if (replacement === alias) continue;
+
 		knowledge.push({
 			id: `a${index}`,
 			type: 'warning',
@@ -139,8 +140,61 @@ function addNativeAliases(aliases, hashes) {
 	}
 }
 
+function lintFolder(folder) {
+	const workspaceFolder = vscode.workspace.getWorkspaceFolder(folder);
+
+	if (!workspaceFolder) return;
+
+	const workspaceFolderPath = workspaceFolder.uri.path;
+
+	const searchPath = path.relative(workspaceFolderPath, folder.path) + '/**/*.lua';
+
+	vscode.window.withProgress({
+		location: vscode.ProgressLocation.Notification,
+		title: 'Linting ' + path.basename(folder.path),
+		cancellable: true
+	}, async (progress, token) => {
+		let canceled = false;
+
+		token.onCancellationRequested(() => {
+			canceled = true;
+		});
+
+		progress.report({
+			increment: 0,
+			message: 'Collecting lua files...'
+		});
+
+		const files = await vscode.workspace.findFiles(searchPath);
+
+		if (canceled) return;
+
+		const nativeDiagnostics = vscode.languages.createDiagnosticCollection('lua');
+
+		let index = 0;
+
+		for (const file of files) {
+			if (canceled) return;
+
+			const percentage = Math.floor((index / files.length) * 100);
+
+			const doc = await vscode.workspace.openTextDocument(file);
+
+			progress.report({
+				increment: 100 / files.length,
+				message: percentage + '% - ' + path.basename(doc.fileName) + '...'
+			});
+
+			refreshDiagnostics(doc, nativeDiagnostics);
+
+			index++;
+		}
+	});
+}
+
 module.exports = {
 	subscribeToDocumentChanges,
 	registerQuickFixHelper,
-	addNativeAliases
+	addNativeAliases,
+	lintFolder
 }

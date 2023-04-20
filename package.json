@@ -2,14 +2,15 @@
 	"name": "vs-fivem",
 	"displayName": "vs-fivem",
 	"description": "Adds up-to-date fivem native support.",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
 	"keywords": [
 		"lua",
 		"fivem",
-		"native"
+		"native",
+		"natives"
 	],
 	"repository": {
 		"type": "git",
@@ -36,6 +37,21 @@
 					"description": "Format parameters in the `pParameter` style."
 				}
 			}
+		},
+		"commands": [
+			{
+				"command": "vs-fivem.lintFolder",
+				"title": "VS-FiveM: Lint folder"
+			}
+		],
+		"menus": {
+			"explorer/context": [
+				{
+					"when": "explorerResourceIsFolder",
+					"command": "vs-fivem.lintFolder",
+					"group": "2_workspace"
+				}
+			]
 		}
 	},
 	"scripts": {

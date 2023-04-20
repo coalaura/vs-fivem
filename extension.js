@@ -2,7 +2,7 @@ const vscode = require('vscode'),
 	fetch = require('node-fetch');
 
 const { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } = require('./natives.js');
-const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases } = require('./diagnostics.js');
+const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder } = require('./diagnostics.js');
 const { updateStatisticsStatus } = require('./statistics.js');
 
 const natives = [],
@@ -157,16 +157,21 @@ function activate(context) {
 	});
 
 	const nativeDiagnostics = vscode.languages.createDiagnosticCollection("natives");
-	context.subscriptions.push(nativeDiagnostics);
 
 	subscribeToDocumentChanges(context, nativeDiagnostics);
 
 	registerQuickFixHelper(context);
 
+	const lintFolderCommandDisposable = vscode.commands.registerCommand('vs-fivem.lintFolder', folder => {
+		lintFolder(folder);
+	});
+
 	context.subscriptions.push(completionDisposable);
 	context.subscriptions.push(hoverDisposable);
 	context.subscriptions.push(changeEditorDisposable);
 	context.subscriptions.push(changeTextDisposable);
+	context.subscriptions.push(nativeDiagnostics);
+	context.subscriptions.push(lintFolderCommandDisposable);
 }
 
 // This method is called when your extension is deactivated
