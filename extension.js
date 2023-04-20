@@ -89,7 +89,7 @@ function activate(context) {
 			const ctx = getPositionContext(document, position);
 
 			const items = natives.filter(native => {
-				return native.name.startsWith(ctx.name);
+				return native.name.includes(ctx.name);
 			}).map(native => {
 				const item = new vscode.CompletionItem(native.name, vscode.CompletionItemKind.Function);
 
