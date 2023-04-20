@@ -105,7 +105,26 @@ function registerQuickFixHelper(context) {
 	);
 }
 
+function addNativeAliases(aliases) {
+	let index = 1;
+
+	for (const alias in aliases) {
+		const replacement = aliases[alias];
+
+		knowledge.push({
+			id: `a${index}`,
+			type: 'warning',
+			regex: new RegExp(`(?<=\\b)${alias}(?=\\s*\\()`, 'g'),
+			message: `${alias} is deprecated, use ${replacement} instead`,
+			replace: replacement
+		});
+
+		index++;
+	}
+}
+
 module.exports = {
 	subscribeToDocumentChanges,
-	registerQuickFixHelper
+	registerQuickFixHelper,
+	addNativeAliases
 }

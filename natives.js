@@ -29,6 +29,8 @@ function createLuaType(type) {
 
 // Converts the native name to a Lua-friendly name
 function createNativeLuaName(name) {
+	name = name.replace(/^_+|_+$/g, '');
+
 	const parts = name.split('_');
 
 	return parts.map(part => {
@@ -99,6 +101,10 @@ function createNativeObject(data) {
 
 	const detail = apiset + ': ' + (returns.length === 0 ? 'void' : returns.map(ret => ret.type).join(', '));
 
+	const aliases = (data.aliases || []).map(name => {
+		return createNativeLuaName(name);
+	});
+
 	return {
 		hash: data.hash,
 		original: data.name,
@@ -108,7 +114,8 @@ function createNativeObject(data) {
 		detail: detail,
 		description: data.description,
 		ns: data.ns,
-		apiset: apiset
+		apiset: apiset,
+		aliases: aliases
 	};
 }
 

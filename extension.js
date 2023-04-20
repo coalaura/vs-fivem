@@ -2,10 +2,11 @@ const vscode = require('vscode'),
 	fetch = require('node-fetch');
 
 const { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } = require('./natives.js');
-const { subscribeToDocumentChanges, registerQuickFixHelper } = require('./diagnostics.js');
+const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases } = require('./diagnostics.js');
 const { updateStatisticsStatus } = require('./statistics.js');
 
-const natives = [];
+const natives = [],
+	aliases = {};
 
 async function getJSON(url) {
 	const response = await fetch(url);
@@ -28,7 +29,15 @@ async function fetchNatives(url) {
 		for (const child in children) {
 			const data = children[child];
 
-			natives.push(createNativeObject(data));
+			const native = createNativeObject(data);
+
+			natives.push(native);
+
+			if (native.aliases) {
+				native.aliases.forEach(alias => {
+					aliases[alias] = native.name;
+				});
+			}
 		}
 	}
 }
@@ -50,6 +59,8 @@ function activate(context) {
 		await fetchNatives('https://runtime.fivem.net/doc/natives.json');
 
 		console.log('Fetched ' + natives.length + ' natives.');
+
+		addNativeAliases(aliases);
 
 		const nativeStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
 

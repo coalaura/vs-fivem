@@ -1,24 +1,24 @@
 module.exports = [
 	// Bad natives
 	{
-		"regex": /GetPlayerPed\s*\(\s*(-1|0)?\s*\)/g,
+		"regex": /(?<=\b)GetPlayerPed\s*\(\s*(-1|0)?\s*\)/g,
 		"message": "Use PlayerPedId() instead of $0",
 		"replace": "PlayerPedId()",
 		"type": "warning"
 	},
 	{
-		"regex": /GetDistanceBetweenCoords/g,
+		"regex": /(?<=\b)GetDistanceBetweenCoords/g,
 		"message": "Use #(vector1 - vector2) instead of $0",
 		"type": "warning"
 	},
 	{
-		"regex": /RegisterServerEvent(?=\s*\()/g,
+		"regex": /(?<=\b)RegisterServerEvent(?=\s*\()/g,
 		"message": "Use RegisterNetEvent instead of $0",
 		"replace": "RegisterNetEvent",
 		"type": "warning"
 	},
 	{
-		"regex": /RegisterClientEvent(?=\s*\()/g,
+		"regex": /(?<=\b)RegisterClientEvent(?=\s*\()/g,
 		"message": "Use RegisterNetEvent instead of $0",
 		"replace": "RegisterNetEvent",
 		"type": "warning"
@@ -32,12 +32,12 @@ module.exports = [
 
 	// Bad practices
 	{
-		"regex": /NetworkRequestControlOf(Entity|NetworkId)(?=\s*\()/g,
+		"regex": /(?<=\b)NetworkRequestControlOf(Entity|NetworkId)(?=\s*\()/g,
 		"message": "You should avoid forcing network ownership of entities",
 		"type": "notice"
 	},
 	{
-		"regex": /DestroyAllCams(?=\s*\()/g,
+		"regex": /(?<=\b)DestroyAllCams(?=\s*\()/g,
 		"message": "Each script should manage its own cameras and destroy them using DestroyCam"
 	}
 ].map((entry, index) => {
