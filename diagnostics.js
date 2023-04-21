@@ -146,7 +146,9 @@ function lintFolder(folder, nativeDiagnostics) {
 
 	const workspaceFolderPath = workspaceFolder.uri.path;
 
-	const searchPath = path.relative(workspaceFolderPath, folder.path) + '/**/*.lua';
+	const searchFolder = path.relative(workspaceFolderPath, folder.path).replace(/\[|\]/g, '[$&]');
+
+	const searchPath = searchFolder + '/**/*.lua';
 
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,
