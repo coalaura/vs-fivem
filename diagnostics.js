@@ -42,6 +42,21 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 		});
 	});
 
+	// Trailing whitespace
+	const matches = text.matchAll(/[ \t]+$/gm);
+
+	Array.from(matches).forEach(match => {
+		const position = doc.positionAt(match.index);
+
+		const range = new vscode.Range(position.line, position.character, position.line, position.character + match[0].length);
+
+		const diagnostic = new vscode.Diagnostic(range, 'Trailing whitespace', vscode.DiagnosticSeverity.Warning);
+
+		diagnostic.code = 'remove';
+
+		diagnostics.push(diagnostic);
+	});
+
 	nativeDiagnostics.set(doc.uri, diagnostics);
 }
 
@@ -72,18 +87,31 @@ function subscribeToDocumentChanges(context, nativeDiagnostics) {
 function getQuickFixFromDiagnostic(document, diagnostic, returnEditOnly) {
 	const id = diagnostic.code;
 
-	const entry = knowledge.find(e => e.id === id);
+	let message = "",
+		replace = "";
 
-	if (entry && entry.replace) {
+	if (id === 'remove') {
+		message = 'Remove trailing whitespace';
+		replace = '';
+	} else {
+		const entry = knowledge.find(e => e.id === id);
+
+		if (entry && entry.replace) {
+			message = `Replace with ${entry.replace}`;
+			replace = entry.replace;
+		}
+	}
+
+	if (message) {
 		const edit = new vscode.WorkspaceEdit();
 
-		edit.replace(document.uri, diagnostic.range, entry.replace);
+		edit.replace(document.uri, diagnostic.range, replace);
 
 		if (returnEditOnly) {
 			return edit;
 		}
 
-		const action = new vscode.CodeAction(`Replace with ${entry.replace}`, vscode.CodeActionKind.QuickFix);
+		const action = new vscode.CodeAction(message, vscode.CodeActionKind.QuickFix);
 
 		action.edit = edit;
 
@@ -230,7 +258,7 @@ async function fixAllDiagnostics(nativeDiagnostics) {
 		vscode.window.withProgress({
 			location: vscode.ProgressLocation.Notification,
 			title: 'Fixing diagnostics',
-		}, async (progress, token) => {
+		}, async (progress) => {
 			let index = 0;
 
 			for (const docPath in diagnostics) {
@@ -245,12 +273,7 @@ async function fixAllDiagnostics(nativeDiagnostics) {
 
 				const uri = vscode.Uri.file(docPath);
 
-				const editor = await vscode.window.showTextDocument(uri, {
-					preview: true,
-					preserveFocus: false
-				});
-
-				const document = editor.document;
+				const document = await vscode.workspace.openTextDocument(uri);
 
 				for (const diagnostic of entries) {
 					const edit = getQuickFixFromDiagnostic(document, diagnostic, true);
@@ -261,8 +284,6 @@ async function fixAllDiagnostics(nativeDiagnostics) {
 				}
 
 				await document.save();
-
-				await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
 
 				index++;
 			}
