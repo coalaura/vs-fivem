@@ -1,4 +1,5 @@
-let nativeList = [];
+let nativeList = [],
+    indexedNatives = {};
 
 let lastSearch = null,
     lastSearchResults = null;
@@ -8,6 +9,40 @@ function setSearchableNatives(natives) {
 
     lastSearch = null;
     lastSearchResults = null;
+
+    indexedNatives = {};
+
+    natives.forEach(native => {
+        const start = native.name.charAt(0).toLowerCase();
+
+        if (!indexedNatives[start]) {
+            indexedNatives[start] = [];
+        }
+
+        indexedNatives[start].push(native);
+    });
+}
+
+function findNative(name, ctx) {
+    const start = name.charAt(0).toLowerCase();
+
+    const natives = indexedNatives[start];
+
+    if (!natives) return false;
+
+    let native = natives.find(native => {
+        return native.name === name && native.apiset === ctx;
+    });
+
+    if (!native) {
+        native = natives.find(native => {
+            return native.name === name;
+        });
+
+        if (!native) return false;
+    }
+
+    return native;
 }
 
 function searchNatives(search) {
@@ -39,5 +74,6 @@ function searchNatives(search) {
 
 module.exports = {
     setSearchableNatives,
-    searchNatives
+    searchNatives,
+    findNative
 };

@@ -4,7 +4,7 @@ const vscode = require('vscode'),
 const { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } = require('./natives.js');
 const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder } = require('./diagnostics.js');
 const { updateStatisticsStatus } = require('./statistics.js');
-const { setSearchableNatives, searchNatives } = require('./search.js');
+const { setSearchableNatives, searchNatives, findNative } = require('./search.js');
 
 const natives = [],
 	aliases = {},
@@ -124,17 +124,9 @@ function activate(context) {
 
 			if (!ctx.name) return;
 
-			let native = natives.find(native => {
-				return native.name === ctx.name && native.apiset === ctx.ctx;
-			});
+			const native = findNative(ctx.name, ctx.ctx);
 
-			if (!native) {
-				native = natives.find(native => {
-					return native.name === ctx.name;
-				});
-
-				if (!native) return;
-			}
+			if (!native) return;
 
 			return new vscode.Hover(createNativeDocumentation(native));
 		}
