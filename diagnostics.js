@@ -110,9 +110,6 @@ function getQuickFixFromDiagnostic(document, diagnostic, returnEditOnly) {
 	} else if (id === 'newlines') {
 		message = 'Reduce newlines';
 		replace = '\n\n';
-
-		// This wont work if we are fixing multiple files at once
-		if (returnEditOnly) return false;
 	} else {
 		const entry = knowledge.find(e => e.id === id);
 
@@ -256,36 +253,30 @@ function lintFolder(folder, nativeDiagnostics) {
 }
 
 async function fixAllDiagnostics(nativeDiagnostics) {
-	const diagnostics = {};
+	const documents = [];
 
 	nativeDiagnostics.forEach((uri, entries) => {
 		const docPath = uri.path;
 
 		entries.forEach(e => {
-			if (!diagnostics[docPath]) {
-				diagnostics[docPath] = [];
+			if (!documents.includes(docPath)) {
+				documents.push(docPath);
 			}
-
-			diagnostics[docPath].push(e);
 		});
 	});
 
-	const count = Object.values(diagnostics).length;
-
-	if (count > 0) {
+	if (documents.length > 0) {
 		vscode.window.withProgress({
 			location: vscode.ProgressLocation.Notification,
 			title: 'Fixing diagnostics',
 		}, async (progress) => {
 			let index = 0;
 
-			for (const docPath in diagnostics) {
-				const entries = diagnostics[docPath];
-
-				const percentage = Math.floor((index / count) * 100);
+			for (const docPath of documents) {
+				const percentage = Math.floor((index / documents.length) * 100);
 
 				progress.report({
-					increment: 100 / count,
+					increment: 100 / documents.length,
 					message: percentage + '%'
 				});
 
@@ -293,12 +284,16 @@ async function fixAllDiagnostics(nativeDiagnostics) {
 
 				const document = await vscode.workspace.openTextDocument(uri);
 
-				for (const diagnostic of entries) {
-					const edit = getQuickFixFromDiagnostic(document, diagnostic, true);
+				while (true) {
+					refreshDiagnostics(document, nativeDiagnostics);
 
-					if (edit) {
-						await vscode.workspace.applyEdit(edit);
-					}
+					const entries = nativeDiagnostics.get(uri);
+
+					const edits = entries.map(e => getQuickFixFromDiagnostic(document, e, true)).filter(e => e);
+
+					if (edits.length === 0) break;
+
+					await vscode.workspace.applyEdit(edits[0]);
 				}
 
 				await document.save();
