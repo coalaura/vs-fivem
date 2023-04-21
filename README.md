@@ -18,6 +18,12 @@ The extension will try to detect the context of the current file (server or clie
 
 ![replace](.github/replace.png)
 
+### Quickly find all issues in a directory and fix them with 2 clicks
+
+![lint-folder](.github/lint-folder.png)
+
+![fix-all](.github/fix-all.png)
+
 ### Statistics
 Displays statistics related to the current file in the status bar.
 

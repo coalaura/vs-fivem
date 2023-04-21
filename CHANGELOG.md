@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.1.0]
+- Massively improved completion and diagnostic speed
+- Added "Fix all Diagnostics" command
+- Added trailing whitespace detection
+- Fixed "Lint Folder" not working on directories including "[]"
+
 ## [1.0.5]
 - Added `vs-fivem.lintFolder` command to lint all files in a folder
 - Added explorer context menu option to lint a folder
