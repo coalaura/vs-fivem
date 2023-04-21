@@ -21,7 +21,7 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 			args = check.args;
 
 		const found = functions.filter(func => {
-			return func.name === name && (!args || args.includes(func.params));
+			return func.name === name && (!args || func.params.match(args));
 		});
 
 		found.forEach(func => {
@@ -79,13 +79,15 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 }
 
 function subscribeToDocumentChanges(context, nativeDiagnostics) {
-	if (vscode.window.activeTextEditor) {
-		refreshDiagnostics(vscode.window.activeTextEditor.document, nativeDiagnostics);
+	const activeEditor = vscode.window.activeTextEditor;
+
+	if (activeEditor && activeEditor.document.languageId === 'lua') {
+		refreshDiagnostics(activeEditor.document, nativeDiagnostics);
 	}
 
 	context.subscriptions.push(
 		vscode.window.onDidChangeActiveTextEditor(editor => {
-			if (editor) {
+			if (editor && activeEditor.document.languageId === 'lua') {
 				refreshDiagnostics(editor.document, nativeDiagnostics);
 			}
 		})
@@ -93,7 +95,9 @@ function subscribeToDocumentChanges(context, nativeDiagnostics) {
 
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeTextDocument(e => {
-			refreshDiagnostics(e.document, nativeDiagnostics)
+			if (e.document.languageId === 'lua') {
+				refreshDiagnostics(e.document, nativeDiagnostics)
+			}
 		})
 	);
 }

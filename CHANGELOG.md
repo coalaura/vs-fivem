@@ -4,6 +4,7 @@
 - Added a check for excessive newlines
 - "Fix all Diagnostics" will now properly fix **ALL** diagnostics
 - Fixed "Lint Folder" not working on the root folder
+- Only run diagnostics on lua files
 
 ## [1.1.0]
 - Massively improved completion and diagnostic speed

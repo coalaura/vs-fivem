@@ -2,11 +2,7 @@ module.exports = [
 	// Bad natives
 	{
 		"func": "GetPlayerPed",
-		"args": [
-			"-1",
-			"0",
-			""
-		],
+		"args": /^(0|-1)?$/m,
 		"message": "Use PlayerPedId instead of GetPlayerPed",
 		"replace": "PlayerPedId()",
 		"type": "warning"
@@ -14,6 +10,11 @@ module.exports = [
 	{
 		"func": "GetDistanceBetweenCoords",
 		"message": "Use #(vector1 - vector2) instead of GetDistanceBetweenCoords",
+		"type": "warning"
+	},
+	{
+		"func": "Vdist",
+		"message": "Use #(vector1 - vector2) instead of Vdist",
 		"type": "warning"
 	},
 	{
@@ -30,9 +31,7 @@ module.exports = [
 	},
 	{
 		"func": "Citizen.Wait",
-		"args": [
-			"1"
-		],
+		"args": /^1$/m,
 		"message": "Use Citizen.Wait(0) to wait for the next tick instead of Citizen.Wait(1)",
 		"replace": "Citizen.Wait(0)",
 		"type": "warning"
