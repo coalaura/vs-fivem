@@ -10,7 +10,9 @@
 		"lua",
 		"fivem",
 		"native",
-		"natives"
+		"natives",
+		"gta",
+		"script"
 	],
 	"repository": {
 		"type": "git",
