@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.1]
+- Added a check for excessive newlines
+- "Fix all Diagnostics" will now properly fix **ALL** diagnostics
+- Fixed "Lint Folder" not working on the root folder
+
 ## [1.1.0]
 - Massively improved completion and diagnostic speed
 - Added "Fix all Diagnostics" command
