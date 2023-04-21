@@ -41,17 +41,45 @@ module.exports = [
 	// Bad practices
 	{
 		"func": "NetworkRequestControlOfEntity",
-		"message": "You should avoid forcing network ownership of entities",
-		"type": "notice"
+		"message": "You should avoid forcing network ownership of entities"
 	},
 	{
 		"func": "NetworkRequestControlOfNetworkId",
-		"message": "You should avoid forcing network ownership of entities",
-		"type": "notice"
+		"message": "You should avoid forcing network ownership of entities"
+	},
+	{
+		"func": "SetNetworkIdCanMigrate",
+		"message": "You should avoid forcing network ownership of entities"
 	},
 	{
 		"func": "DestroyAllCams",
 		"message": "Each script should manage its own cameras and destroy them using DestroyCam"
+	},
+
+	// Clean code
+	{
+		"func": "Wait",
+		"message": "Use Citizen.Wait instead of just Wait",
+		"replace": "Citizen.Wait",
+		"type": "warning"
+	},
+	{
+		"func": "SetTimeout",
+		"message": "Use Citizen.SetTimeout instead of just SetTimeout",
+		"replace": "Citizen.SetTimeout",
+		"type": "warning"
+	},
+	{
+		"func": "CreateThreadNow",
+		"message": "Use Citizen.CreateThreadNow instead of just CreateThreadNow",
+		"replace": "Citizen.CreateThreadNow",
+		"type": "warning"
+	},
+	{
+		"func": "CreateThread",
+		"message": "Use Citizen.CreateThread instead of just CreateThread",
+		"replace": "Citizen.CreateThread",
+		"type": "warning"
 	}
 ].map((entry, index) => {
 	entry.id = `k${index + 1}`;

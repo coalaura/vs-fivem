@@ -43,7 +43,7 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 	});
 
 	// Trailing whitespace
-	const matches = text.matchAll(/[ \t]+$/gm);
+	let matches = text.matchAll(/[ \t]+$/gm);
 
 	Array.from(matches).forEach(match => {
 		const position = doc.positionAt(match.index);
@@ -52,10 +52,28 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 
 		const diagnostic = new vscode.Diagnostic(range, 'Trailing whitespace', vscode.DiagnosticSeverity.Warning);
 
-		diagnostic.code = 'remove';
+		diagnostic.code = 'whitespace';
 
 		diagnostics.push(diagnostic);
 	});
+
+	// 3 or more newlines
+	matches = text.matchAll(/(\r?\n){3,}/gm);
+
+	Array.from(matches).forEach(match => {
+		const start = doc.positionAt(match.index),
+			end = doc.positionAt(match.index + match[0].length);
+
+		const range = new vscode.Range(start.line, start.character, end.line, end.character);
+
+		const diagnostic = new vscode.Diagnostic(range, 'Avoid excessive newlines', vscode.DiagnosticSeverity.Information);
+
+		diagnostic.code = 'newlines';
+
+		diagnostics.push(diagnostic);
+	});
+
+	nativeDiagnostics.delete(doc.uri);
 
 	nativeDiagnostics.set(doc.uri, diagnostics);
 }
@@ -67,8 +85,6 @@ function subscribeToDocumentChanges(context, nativeDiagnostics) {
 
 	context.subscriptions.push(
 		vscode.window.onDidChangeActiveTextEditor(editor => {
-			nativeDiagnostics.clear();
-
 			if (editor) {
 				refreshDiagnostics(editor.document, nativeDiagnostics);
 			}
@@ -77,8 +93,6 @@ function subscribeToDocumentChanges(context, nativeDiagnostics) {
 
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeTextDocument(e => {
-			nativeDiagnostics.clear();
-
 			refreshDiagnostics(e.document, nativeDiagnostics)
 		})
 	);
@@ -90,9 +104,15 @@ function getQuickFixFromDiagnostic(document, diagnostic, returnEditOnly) {
 	let message = "",
 		replace = "";
 
-	if (id === 'remove') {
+	if (id === 'whitespace') {
 		message = 'Remove trailing whitespace';
 		replace = '';
+	} else if (id === 'newlines') {
+		message = 'Reduce newlines';
+		replace = '\n\n';
+
+		// This wont work if we are fixing multiple files at once
+		if (returnEditOnly) return false;
 	} else {
 		const entry = knowledge.find(e => e.id === id);
 
@@ -192,7 +212,7 @@ function lintFolder(folder, nativeDiagnostics) {
 
 	const searchFolder = path.relative(workspaceFolderPath, folder.path).replace(/\[|\]/g, '[$&]');
 
-	const searchPath = searchFolder + '/**/*.lua';
+	const searchPath = (searchFolder ? searchFolder + '/' : '') + '**/*.lua';
 
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,
@@ -213,8 +233,6 @@ function lintFolder(folder, nativeDiagnostics) {
 		const files = await vscode.workspace.findFiles(searchPath);
 
 		if (canceled) return;
-
-		nativeDiagnostics.clear();
 
 		let index = 0;
 
