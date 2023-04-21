@@ -4,6 +4,7 @@ const vscode = require('vscode'),
 const { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } = require('./natives.js');
 const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder } = require('./diagnostics.js');
 const { updateStatisticsStatus } = require('./statistics.js');
+const { setSearchableNatives, searchNatives } = require('./search.js');
 
 const natives = [],
 	aliases = {},
@@ -66,6 +67,7 @@ function activate(context) {
 		console.log('Fetched ' + natives.length + ' natives.');
 
 		addNativeAliases(aliases, hashes);
+		setSearchableNatives(natives);
 
 		const nativeStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
 
@@ -88,15 +90,17 @@ function activate(context) {
 		provideCompletionItems(document, position) {
 			const ctx = getPositionContext(document, position);
 
-			const items = natives.filter(native => {
-				return native.name.includes(ctx.name);
-			}).map(native => {
+			console.log(ctx.ctx, ctx.name, ctx.inline)
+
+			const results = searchNatives(ctx.name);
+
+			const items = results.map(native => {
 				const item = new vscode.CompletionItem(native.name, vscode.CompletionItemKind.Function);
 
 				item.detail = native.detail;
 				item.documentation = native.description;
 
-				item.sortText = (native.apiset === ctx.ctx ? '~' : '') + native.name;
+				item.sortText = (native.apiset === ctx.ctx ? '' : '~') + native.name;
 
 				let insertText = native.name + '(' + formatParameters(native.params, true) + ')';
 

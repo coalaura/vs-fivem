@@ -1,4 +1,5 @@
-const vscode = require('vscode');
+const vscode = require('vscode'),
+	path = require('path');
 
 const underscoreParts = [
 	'3d',
@@ -22,6 +23,8 @@ function createLuaType(type) {
 		case 'char':
 		case 'char*':
 			return 'string';
+		case 'Any':
+			return 'any';
 	}
 
 	return type;
@@ -121,6 +124,8 @@ function createNativeObject(data) {
 
 // Gets the context of the current position (client or server)
 function getFileContext(filename) {
+	filename = path.basename(filename);
+
 	if (filename.includes('server') || filename.includes('sv_')) {
 		return 'server';
 	}
