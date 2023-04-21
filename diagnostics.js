@@ -28,7 +28,7 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 			const position = doc.positionAt(func.index);
 
 			const start = position.character,
-				end = start + func.name.length;
+				end = start + (args ? func.match : func.name).length;
 
 			const range = new vscode.Range(position.line, start, position.line, end);
 
@@ -69,6 +69,30 @@ function subscribeToDocumentChanges(context, nativeDiagnostics) {
 	);
 }
 
+function getQuickFixFromDiagnostic(document, diagnostic, returnEditOnly) {
+	const id = diagnostic.code;
+
+	const entry = knowledge.find(e => e.id === id);
+
+	if (entry && entry.replace) {
+		const edit = new vscode.WorkspaceEdit();
+
+		edit.replace(document.uri, diagnostic.range, entry.replace);
+
+		if (returnEditOnly) {
+			return edit;
+		}
+
+		const action = new vscode.CodeAction(`Replace with ${entry.replace}`, vscode.CodeActionKind.QuickFix);
+
+		action.edit = edit;
+
+		return action;
+	}
+
+	return false;
+}
+
 function registerQuickFixHelper(context) {
 	context.subscriptions.push(
 		vscode.languages.registerCodeActionsProvider('lua', {
@@ -82,17 +106,9 @@ function registerQuickFixHelper(context) {
 				const actions = [];
 
 				for (const diagnostic of diagnostics) {
-					const id = diagnostic.code;
+					const action = getQuickFixFromDiagnostic(document, diagnostic, false);
 
-					const entry = knowledge.find(e => e.id === id);
-
-					if (entry && entry.replace) {
-						const action = new vscode.CodeAction(`Replace with ${entry.replace}`, vscode.CodeActionKind.QuickFix);
-
-						action.edit = new vscode.WorkspaceEdit();
-
-						action.edit.replace(document.uri, range, entry.replace);
-
+					if (action) {
 						actions.push(action);
 					}
 				}
@@ -193,10 +209,72 @@ function lintFolder(folder, nativeDiagnostics) {
 	});
 }
 
+async function fixAllDiagnostics(nativeDiagnostics) {
+	const diagnostics = {};
+
+	nativeDiagnostics.forEach((uri, entries) => {
+		const docPath = uri.path;
+
+		entries.forEach(e => {
+			if (!diagnostics[docPath]) {
+				diagnostics[docPath] = [];
+			}
+
+			diagnostics[docPath].push(e);
+		});
+	});
+
+	const count = Object.values(diagnostics).length;
+
+	if (count > 0) {
+		vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: 'Fixing diagnostics',
+		}, async (progress, token) => {
+			let index = 0;
+
+			for (const docPath in diagnostics) {
+				const entries = diagnostics[docPath];
+
+				const percentage = Math.floor((index / count) * 100);
+
+				progress.report({
+					increment: 100 / count,
+					message: percentage + '%'
+				});
+
+				const uri = vscode.Uri.file(docPath);
+
+				const editor = await vscode.window.showTextDocument(uri, {
+					preview: true,
+					preserveFocus: false
+				});
+
+				const document = editor.document;
+
+				for (const diagnostic of entries) {
+					const edit = getQuickFixFromDiagnostic(document, diagnostic, true);
+
+					if (edit) {
+						await vscode.workspace.applyEdit(edit);
+					}
+				}
+
+				await document.save();
+
+				await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+
+				index++;
+			}
+		});
+	}
+}
+
 module.exports = {
 	refreshDiagnostics,
 	subscribeToDocumentChanges,
 	registerQuickFixHelper,
 	addNativeAliases,
-	lintFolder
+	lintFolder,
+	fixAllDiagnostics
 }

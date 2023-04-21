@@ -18,7 +18,8 @@ function findAllFunctions(text) {
         return {
             name,
             params,
-            index
+            index,
+            match: match[0]
         };
     }).filter(func => func.name !== 'function');
 }

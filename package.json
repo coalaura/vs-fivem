@@ -42,6 +42,10 @@
 			{
 				"command": "vs-fivem.lintFolder",
 				"title": "VS-FiveM: Lint folder"
+			},
+			{
+				"command": "vs-fivem.fixAll",
+				"title": "VS-FiveM: Fix all Diagnostics"
 			}
 		],
 		"menus": {
