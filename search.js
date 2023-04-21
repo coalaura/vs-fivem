@@ -4,6 +4,25 @@ let nativeList = [],
 let lastSearch = null,
     lastSearchResults = null;
 
+function findAllFunctions(text) {
+    const rgx = /(?<=^|[^\w:])([\w.]+)\s*\(\s*(.+?)\s*(\)|$)/gm;
+
+    const matches = text.matchAll(rgx);
+
+    return Array.from(matches).map(match => {
+        const name = match[1];
+        const params = match[2].trim();
+
+        const index = match.index;
+
+        return {
+            name,
+            params,
+            index
+        };
+    }).filter(func => func.name !== 'function');
+}
+
 function setSearchableNatives(natives) {
     nativeList = natives;
 
@@ -75,5 +94,6 @@ function searchNatives(search) {
 module.exports = {
     setSearchableNatives,
     searchNatives,
-    findNative
+    findNative,
+    findAllFunctions
 };

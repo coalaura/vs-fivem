@@ -1,49 +1,46 @@
 const path = require('path');
 const vscode = require('vscode');
 
+const { findAllFunctions } = require('./search.js');
+
 const knowledge = require('./knowledge.js');
 
 function refreshDiagnostics(doc, nativeDiagnostics) {
+	if (!doc) {
+		return;
+	}
+
 	const text = doc.getText();
 
-	const results = [];
-
-	for (const check of knowledge) {
-		const matches = text.matchAll(check.regex);
-
-		for (const match of matches) {
-			const position = doc.positionAt(match.index);
-
-			const start = position.character,
-				end = start + match[0].length;
-
-			results.push({
-				message: check.message.replace('$0', match[0]),
-				start: start,
-				end: end,
-				line: position.line,
-
-				id: check.id,
-				type: check.type
-			});
-		}
-	}
+	const functions = findAllFunctions(text);
 
 	const diagnostics = [];
 
-	if (results) {
-		results.forEach(r => {
-			const range = new vscode.Range(r.line, r.start, r.line, r.end);
+	knowledge.forEach(check => {
+		const name = check.func,
+			args = check.args;
 
-			const severity = r.type === 'warning' ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Information;
+		const found = functions.filter(func => {
+			return func.name === name && (!args || args.includes(func.params));
+		});
 
-			const diagnostic = new vscode.Diagnostic(range, r.message, severity);
+		found.forEach(func => {
+			const position = doc.positionAt(func.index);
 
-			diagnostic.code = r.id;
+			const start = position.character,
+				end = start + func.name.length;
+
+			const range = new vscode.Range(position.line, start, position.line, end);
+
+			const severity = check.type === 'warning' ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Information;
+
+			const diagnostic = new vscode.Diagnostic(range, check.message, severity);
+
+			diagnostic.code = check.id;
 
 			diagnostics.push(diagnostic);
 		});
-	}
+	});
 
 	nativeDiagnostics.set(doc.uri, diagnostics);
 }
@@ -55,6 +52,8 @@ function subscribeToDocumentChanges(context, nativeDiagnostics) {
 
 	context.subscriptions.push(
 		vscode.window.onDidChangeActiveTextEditor(editor => {
+			nativeDiagnostics.clear();
+
 			if (editor) {
 				refreshDiagnostics(editor.document, nativeDiagnostics);
 			}
@@ -62,11 +61,11 @@ function subscribeToDocumentChanges(context, nativeDiagnostics) {
 	);
 
 	context.subscriptions.push(
-		vscode.workspace.onDidChangeTextDocument(e => refreshDiagnostics(e.document, nativeDiagnostics))
-	);
+		vscode.workspace.onDidChangeTextDocument(e => {
+			nativeDiagnostics.clear();
 
-	context.subscriptions.push(
-		vscode.workspace.onDidCloseTextDocument(doc => nativeDiagnostics.delete(doc.uri))
+			refreshDiagnostics(e.document, nativeDiagnostics)
+		})
 	);
 }
 
@@ -115,7 +114,7 @@ function addNativeAliases(aliases, hashes) {
 		knowledge.push({
 			id: `a${index}`,
 			type: 'warning',
-			regex: new RegExp(`(?<=^|[^\\w:])${alias}(?=\\s*\\()`, 'g'),
+			func: alias,
 			message: `${alias} is deprecated, use ${replacement} instead`,
 			replace: replacement
 		});
@@ -131,7 +130,7 @@ function addNativeAliases(aliases, hashes) {
 		knowledge.push({
 			id: `h${index}`,
 			type: 'warning',
-			regex: new RegExp(`(?<=^|[^\\w:])${hash}(?=\\s*\\()`, 'g'),
+			func: hash,
 			message: `Use the named native ${replacement} instead of its hash ${hash}`,
 			replace: replacement
 		});
@@ -140,7 +139,7 @@ function addNativeAliases(aliases, hashes) {
 	}
 }
 
-function lintFolder(folder) {
+function lintFolder(folder, nativeDiagnostics) {
 	const workspaceFolder = vscode.workspace.getWorkspaceFolder(folder);
 
 	if (!workspaceFolder) return;
@@ -169,7 +168,7 @@ function lintFolder(folder) {
 
 		if (canceled) return;
 
-		const nativeDiagnostics = vscode.languages.createDiagnosticCollection('lua');
+		nativeDiagnostics.clear();
 
 		let index = 0;
 
@@ -193,6 +192,7 @@ function lintFolder(folder) {
 }
 
 module.exports = {
+	refreshDiagnostics,
 	subscribeToDocumentChanges,
 	registerQuickFixHelper,
 	addNativeAliases,

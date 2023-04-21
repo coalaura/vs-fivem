@@ -2,7 +2,7 @@ const vscode = require('vscode'),
 	fetch = require('node-fetch');
 
 const { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } = require('./natives.js');
-const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder } = require('./diagnostics.js');
+const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder, refreshDiagnostics } = require('./diagnostics.js');
 const { updateStatisticsStatus } = require('./statistics.js');
 const { setSearchableNatives, searchNatives, findNative } = require('./search.js');
 
@@ -54,6 +54,8 @@ async function fetchNatives(url) {
 function activate(context) {
 	if (natives.length > 0) return;
 
+	const nativeDiagnostics = vscode.languages.createDiagnosticCollection("natives");
+
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Window,
 		cancellable: false,
@@ -63,8 +65,6 @@ function activate(context) {
 
 		await fetchNatives('https://runtime.fivem.net/doc/natives_cfx.json');
 		await fetchNatives('https://runtime.fivem.net/doc/natives.json');
-
-		console.log('Fetched ' + natives.length + ' natives.');
 
 		addNativeAliases(aliases, hashes);
 		setSearchableNatives(natives);
@@ -81,6 +81,7 @@ function activate(context) {
 		const document = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.document : false;
 
 		updateStatisticsStatus(document, natives);
+		refreshDiagnostics(document, nativeDiagnostics);
 
 		progress.report({ increment: 100 });
 	});
@@ -89,8 +90,6 @@ function activate(context) {
 	const completionDisposable = vscode.languages.registerCompletionItemProvider('lua', {
 		provideCompletionItems(document, position) {
 			const ctx = getPositionContext(document, position);
-
-			console.log(ctx.ctx, ctx.name, ctx.inline)
 
 			const results = searchNatives(ctx.name);
 
@@ -152,14 +151,12 @@ function activate(context) {
 		}, 500);
 	});
 
-	const nativeDiagnostics = vscode.languages.createDiagnosticCollection("natives");
-
 	subscribeToDocumentChanges(context, nativeDiagnostics);
 
 	registerQuickFixHelper(context);
 
 	const lintFolderCommandDisposable = vscode.commands.registerCommand('vs-fivem.lintFolder', folder => {
-		lintFolder(folder);
+		lintFolder(folder, nativeDiagnostics);
 	});
 
 	context.subscriptions.push(completionDisposable);

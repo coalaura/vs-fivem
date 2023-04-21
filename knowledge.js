@@ -1,43 +1,56 @@
 module.exports = [
 	// Bad natives
 	{
-		"regex": /(?<=^|[^\w:])GetPlayerPed\s*\(\s*(-1|0)?\s*\)/g,
-		"message": "Use PlayerPedId() instead of $0",
+		"func": "GetPlayerPed",
+		"args": [
+			"-1",
+			"0",
+			""
+		],
+		"message": "Use PlayerPedId instead of GetPlayerPed",
 		"replace": "PlayerPedId()",
 		"type": "warning"
 	},
 	{
-		"regex": /(?<=^|[^\w:])GetDistanceBetweenCoords/g,
-		"message": "Use #(vector1 - vector2) instead of $0",
+		"func": "GetDistanceBetweenCoords",
+		"message": "Use #(vector1 - vector2) instead of GetDistanceBetweenCoords",
 		"type": "warning"
 	},
 	{
-		"regex": /(?<=^|[^\w:])RegisterServerEvent(?=\s*\()/g,
-		"message": "Use RegisterNetEvent instead of $0",
+		"func": "RegisterServerEvent",
+		"message": "Use RegisterNetEvent instead of RegisterServerEvent",
 		"replace": "RegisterNetEvent",
 		"type": "warning"
 	},
 	{
-		"regex": /(?<=^|[^\w:])RegisterClientEvent(?=\s*\()/g,
-		"message": "Use RegisterNetEvent instead of $0",
+		"func": "RegisterClientEvent",
+		"message": "Use RegisterNetEvent instead of RegisterClientEvent",
 		"replace": "RegisterNetEvent",
 		"type": "warning"
 	},
 	{
-		"regex": /(?<=^|[^\w:])(Citizen\.)?Wait\s*\(\s*1\s*\)/g,
-		"message": "Use Citizen.Wait(0) to wait for the next tick instead of $0",
+		"func": "Citizen.Wait",
+		"args": [
+			"1"
+		],
+		"message": "Use Citizen.Wait(0) to wait for the next tick instead of Citizen.Wait(1)",
 		"replace": "Citizen.Wait(0)",
 		"type": "warning"
 	},
 
 	// Bad practices
 	{
-		"regex": /(?<=^|[^\w:])NetworkRequestControlOf(Entity|NetworkId)(?=\s*\()/g,
+		"func": "NetworkRequestControlOfEntity",
 		"message": "You should avoid forcing network ownership of entities",
 		"type": "notice"
 	},
 	{
-		"regex": /(?<=^|[^\w:])DestroyAllCams(?=\s*\()/g,
+		"func": "NetworkRequestControlOfNetworkId",
+		"message": "You should avoid forcing network ownership of entities",
+		"type": "notice"
+	},
+	{
+		"func": "DestroyAllCams",
 		"message": "Each script should manage its own cameras and destroy them using DestroyCam"
 	}
 ].map((entry, index) => {
