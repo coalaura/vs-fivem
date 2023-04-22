@@ -5,6 +5,7 @@ const { createNativeObject, createNativeDocumentation, formatParameters, formatR
 const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder, refreshDiagnostics, fixAllDiagnostics } = require('./diagnostics.js');
 const { updateStatisticsStatus } = require('./statistics.js');
 const { setSearchableNatives, searchNatives, findNative } = require('./search.js');
+const { setNatives, registerWebViewProvider } = require('./view.js');
 
 const natives = [],
 	aliases = {},
@@ -68,6 +69,7 @@ function activate(context) {
 
 		addNativeAliases(aliases, hashes);
 		setSearchableNatives(natives);
+		setNatives(natives);
 
 		const nativeStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
 
@@ -162,6 +164,8 @@ function activate(context) {
 	const fixAllCommandDisposable = vscode.commands.registerCommand('vs-fivem.fixAll', () => {
 		fixAllDiagnostics(nativeDiagnostics);
 	});
+
+	registerWebViewProvider(context);
 
 	context.subscriptions.push(completionDisposable);
 	context.subscriptions.push(hoverDisposable);

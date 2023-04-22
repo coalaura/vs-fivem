@@ -1,8 +1,8 @@
 {
 	"name": "vs-fivem",
 	"displayName": "vs-fivem",
-	"description": "Adds up-to-date fivem native support.",
-	"version": "1.1.1",
+	"description": "Adds up-to-date in-depth fivem native support.",
+	"version": "1.2.0",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
@@ -58,6 +58,24 @@
 					"group": "2_workspace"
 				}
 			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "natives-search",
+					"title": "Natives",
+					"icon": "nav-icon.svg"
+				}
+			]
+		},
+		"views": {
+			"natives-search": [
+				{
+					"id": "vs-fivem.search",
+					"name": "Search",
+					"type": "webview"
+				}
+			]
 		}
 	},
 	"scripts": {
@@ -78,6 +96,7 @@
 		"typescript": "^4.9.5"
 	},
 	"dependencies": {
+		"marked": "^4.3.0",
 		"node-fetch": "^2.6.6"
 	}
 }

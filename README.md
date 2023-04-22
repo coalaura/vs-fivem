@@ -7,6 +7,10 @@ Natives are automatically updated from the FiveM documentation.
 
 ![documentation](.github/documentation.png)
 
+### Built in search
+
+![search](.github/search.png)
+
 ### Auto-completion
 The extension will try to detect the context of the current file (server or client) and will prioritize natives that are available in that context.
 

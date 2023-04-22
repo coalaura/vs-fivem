@@ -68,7 +68,7 @@ function createNativeDocumentation(native) {
 
 	lines.push('```lua\n' + documentation.join('\n') + '\n```');
 
-	lines.push(native.description);
+	lines.push(native.description.replace(/(?<=\()#\\_(?=0x)/g, 'https://docs.fivem.net/natives/?_'));
 
 	return lines;
 }

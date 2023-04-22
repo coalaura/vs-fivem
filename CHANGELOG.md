@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.0]
+- Added a built in search tab
+- Fixed inline native reference links not working
+
 ## [1.1.1]
 - Added a check for excessive newlines
 - "Fix all Diagnostics" will now properly fix **ALL** diagnostics
