@@ -268,7 +268,7 @@ async function fixAllDiagnostics(nativeDiagnostics) {
 	nativeDiagnostics.forEach((uri, entries) => {
 		const docPath = uri.path;
 
-		entries.forEach(e => {
+		entries.forEach(() => {
 			if (!documents.includes(docPath)) {
 				documents.push(docPath);
 			}

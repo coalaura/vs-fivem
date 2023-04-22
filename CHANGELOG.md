@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.1]
+- Fix native search not working (oops)
+- Cache natives for offline usage
+
 ## [1.2.0]
 - Added a built in search tab
 - Fixed inline native reference links not working
