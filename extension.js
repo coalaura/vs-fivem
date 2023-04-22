@@ -7,7 +7,7 @@ const { updateStatisticsStatus } = require('./statistics.js');
 const { setSearchableNatives, searchNatives, findNative } = require('./search.js');
 const { setNatives, registerWebViewProvider } = require('./view.js');
 
-const natives = [],
+let natives = [],
 	aliases = {},
 	hashes = {};
 
@@ -17,13 +17,13 @@ async function getJSON(url) {
 	return response.json();
 }
 
-async function fetchNatives(url) {
+async function fetchNatives(url, result) {
 	const json = await getJSON(url);
 
 	if (!json) {
 		console.log('Failed to fetch natives from ' + url);
 
-		return;
+		return false;
 	}
 
 	for (const category in json) {
@@ -34,19 +34,21 @@ async function fetchNatives(url) {
 
 			const native = createNativeObject(data);
 
-			natives.push(native);
+			result.natives.push(native);
 
 			if (native.aliases) {
 				native.aliases.forEach(alias => {
-					aliases[alias] = native.name;
+					result.aliases[alias] = native.name;
 				});
 			}
 
 			if (native.name !== native.hash) {
-				hashes['N_' + native.hash] = native.name;
+				result.hashes['N_' + native.hash] = native.name;
 			}
 		}
 	}
+
+	return true;
 }
 
 /**
@@ -54,6 +56,18 @@ async function fetchNatives(url) {
  */
 function activate(context) {
 	if (natives.length > 0) return;
+
+	const cache = context.globalState.get('natives');
+
+	if (cache && cache.natives && cache.aliases && cache.hashes) {
+		natives = cache.natives;
+		aliases = cache.aliases;
+		hashes = cache.hashes;
+
+		addNativeAliases(aliases, hashes);
+		setSearchableNatives(natives);
+		setNatives(natives);
+	}
 
 	const nativeDiagnostics = vscode.languages.createDiagnosticCollection("natives");
 
@@ -64,8 +78,22 @@ function activate(context) {
 	}, async (progress) => {
 		progress.report({ increment: 10 });
 
-		await fetchNatives('https://runtime.fivem.net/doc/natives_cfx.json');
-		await fetchNatives('https://runtime.fivem.net/doc/natives.json');
+		const result = {
+			natives: [],
+			aliases: {},
+			hashes: {}
+		};
+
+		const ok1 = await fetchNatives('https://runtime.fivem.net/doc/natives_cfx.json', result);
+		const ok2 = await fetchNatives('https://runtime.fivem.net/doc/natives.json', result);
+
+		if (ok1 && ok2) {
+			natives = result.natives;
+			aliases = result.aliases;
+			hashes = result.hashes;
+
+			context.globalState.update('natives', result);
+		}
 
 		addNativeAliases(aliases, hashes);
 		setSearchableNatives(natives);

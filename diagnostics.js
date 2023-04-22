@@ -3,7 +3,7 @@ const vscode = require('vscode');
 
 const { findAllFunctions } = require('./search.js');
 
-const knowledge = require('./knowledge.js');
+let knowledge = require('./knowledge.js');
 
 function refreshDiagnostics(doc, nativeDiagnostics) {
 	if (!doc) {
@@ -169,6 +169,8 @@ function registerQuickFixHelper(context) {
 }
 
 function addNativeAliases(aliases, hashes) {
+	knowledge = knowledge.filter(e => !e.dynamic);
+
 	let index = 1;
 
 	for (const alias in aliases) {
@@ -177,6 +179,8 @@ function addNativeAliases(aliases, hashes) {
 		if (replacement === alias) continue;
 
 		knowledge.push({
+			dynamic: true,
+
 			id: `a${index}`,
 			type: 'warning',
 			func: alias,
@@ -193,6 +197,8 @@ function addNativeAliases(aliases, hashes) {
 		const replacement = hashes[hash];
 
 		knowledge.push({
+			dynamic: true,
+
 			id: `h${index}`,
 			type: 'warning',
 			func: hash,

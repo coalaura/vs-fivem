@@ -108,6 +108,10 @@ class Provider {
                 this.sendSearchData();
             }
         });
+
+        if (natives.length > 0) {
+            this.sendSearchData();
+        }
     }
 }
 
