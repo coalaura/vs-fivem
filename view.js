@@ -82,7 +82,9 @@ class Provider {
 
                 if (native) {
                     if (!this.viewer) {
-                        this.viewer = vscode.window.createWebviewPanel('vs-fivem.nativeView', native.name, vscode.ViewColumn.One);
+                        this.viewer = vscode.window.createWebviewPanel('vs-fivem.nativeView', native.name, vscode.ViewColumn.One, {
+                            enableScripts: true
+                        });
 
                         this.viewer.onDidDispose(() => {
                             this.viewer = null;

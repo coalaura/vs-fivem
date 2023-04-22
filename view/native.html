@@ -24,11 +24,15 @@
     }
 
     pre {
-        font-family: var(--vscode-editor-font-family);
         background-color: var(--vscode-textBlockQuote-background);
-        color: var(--vscode-textBlockQuote-foreground);
         padding: 10px 15px;
         width: fit-content;
+    }
+
+    code {
+        font-family: var(--vscode-editor-font-family);
+        font-size: var(--vscode-editor-font-size);
+        font-weight: var(--vscode-editor-font-weight);
     }
 
     a {
@@ -68,4 +72,16 @@
         border-color: var(--vscode-menu-separatorBackground);
         margin: 15px 0;
     }
+
+    .comment {
+        opacity: 0.7;
+    }
 </style>
+
+<script>
+    document.querySelectorAll("pre").forEach((pre) => {
+        pre.innerHTML = pre.innerHTML.replace(/--.+?(]]|(?=$))/gm, (match) => {
+            return `<span class="comment">${match}</span>`;
+        });
+    });
+</script>
