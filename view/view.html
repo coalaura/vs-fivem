@@ -26,6 +26,10 @@
 
         switch (message.type) {
             case "search":
+                if (search !== document.activeElement) {
+                    search.value = message.search;
+                }
+
                 search.disabled = false;
                 search.focus();
 

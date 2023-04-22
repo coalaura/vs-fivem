@@ -11,8 +11,9 @@ let provider = null,
 class Provider {
     constructor() {
         this.search = '';
-        this.webview = null;
+        this.actualSearch = '';
 
+        this.webview = null;
         this.viewer = null;
     }
 
@@ -46,6 +47,7 @@ class Provider {
 
         this.webview.postMessage({
             type: 'search',
+            search: this.actualSearch,
             results: results,
             total: natives.length
         });
@@ -53,7 +55,6 @@ class Provider {
 
     resolveWebviewView(webviewView) {
         this.webview = webviewView.webview;
-        this.search = '';
 
         const html = fs.readFileSync(path.join(__dirname, 'view', 'view.html'), 'utf8'),
             template = fs.readFileSync(path.join(__dirname, 'view', 'native.html'), 'utf8');
@@ -70,7 +71,9 @@ class Provider {
                 value = message.value;
 
             if (type === 'search') {
-                const searchTerm = value.trim().toLowerCase();
+                this.actualSearch = value.trim();
+
+                const searchTerm = this.actualSearch.toLowerCase();
 
                 if (searchTerm !== this.search) {
                     this.search = searchTerm;
