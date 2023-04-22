@@ -48,7 +48,7 @@ function createNativeLuaName(name) {
 }
 
 // Generates the hover documentation for a native
-function createNativeDocumentation(native) {
+function createNativeDocumentation(native, detailed) {
 	let lines = [
 		`Namespace: **${native.ns}** - API set: **${native.apiset}**`,
 		`[${native.hash}](https://docs.fivem.net/natives/?_${native.hash})`
@@ -68,7 +68,33 @@ function createNativeDocumentation(native) {
 
 	lines.push('```lua\n' + documentation.join('\n') + '\n```');
 
+	if (detailed) {
+		const params = native.params.map(param => {
+			return `|${param.name}|${param.type}|${param.description || '-'}|`;
+		}).join('\n');
+
+		lines.push('|Parameter|Type|Description|\n|---|---|---|\n' + params);
+
+		if (native.returnDescription) {
+			const description = native.returnDescription[0].toLowerCase() + native.returnDescription.slice(1);
+
+			lines.push(`Returns ${description}`);
+		}
+
+		lines.push('---');
+	}
+
 	lines.push(native.description.replace(/(?<=\()#\\_(?=0x)/g, 'https://docs.fivem.net/natives/?_'));
+
+	if (detailed) {
+		const example = native.example;
+
+		if (example) {
+			lines.push('---');
+
+			lines.push('**Example:**\n```lua\n' + example + '\n```');
+		}
+	}
 
 	return lines;
 }
@@ -98,7 +124,8 @@ function createNativeObject(data) {
 	}).map(param => {
 		return {
 			name: param.name,
-			type: createLuaType(param.type.replace('*', ''))
+			type: createLuaType(param.type.replace('*', '')),
+			description: param.description
 		};
 	});
 
@@ -108,14 +135,20 @@ function createNativeObject(data) {
 		return createNativeLuaName(name);
 	});
 
+	const example = data.examples ? data.examples.find(example => {
+		return example.lang === 'lua';
+	}) : null;
+
 	return {
 		hash: data.hash,
 		original: data.name,
 		name: data.name ? createNativeLuaName(data.name) : data.hash,
 		params: params,
 		returns: returns,
+		returnDescription: data.resultsDescription,
 		detail: detail,
 		description: data.description,
+		example: example ? example.code : null,
 		ns: data.ns,
 		apiset: apiset,
 		aliases: aliases

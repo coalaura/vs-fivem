@@ -11,6 +11,12 @@
         width: 100%;
     }
 
+    ::selection {
+        background: var(--vscode-editor-selectionBackground);
+        color: var(--vscode-editor-selectionForeground);
+    }
+
+    table,
     pre,
     p {
         margin: 0;
@@ -30,5 +36,36 @@
         text-decoration: none;
         font-weight: 500;
         outline: none !important;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        padding: 7px 10px;
+        text-align: left;
+    }
+
+    td:last-child {
+        font-size: 12.5px;
+        font-style: italic;
+    }
+
+    th:not(:last-child),
+    td:not(:last-child) {
+        white-space: nowrap;
+        border-right: 1px solid var(--vscode-menu-separatorBackground);
+    }
+
+    thead tr,
+    tr:not(:last-child) {
+        border-bottom: 1px solid var(--vscode-menu-separatorBackground);
+    }
+
+    hr {
+        border-color: var(--vscode-menu-separatorBackground);
+        margin: 15px 0;
     }
 </style>
