@@ -6,6 +6,11 @@
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
+	"galleryBanner": {
+		"color": "#F0F0F0",
+		"theme": "light"
+	},
+	"license": "SEE LICENSE IN LICENSE",
 	"keywords": [
 		"lua",
 		"fivem",
