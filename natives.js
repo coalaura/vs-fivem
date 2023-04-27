@@ -208,7 +208,7 @@ function getPositionContext(document, position) {
 
 	linePrefix = linePrefix.substring(0, linePrefix.length - prefix.length).trim();
 
-	if (linePrefix.endsWith(',') || linePrefix.endsWith('(') || linePrefix.endsWith('=')) {
+	if (linePrefix.match(/(,|or|and|if|while|\(|=)$/gm)) {
 		return {
 			inline: true,
 			name: functionName,
@@ -218,7 +218,7 @@ function getPositionContext(document, position) {
 
 	previousLine = previousLine.trim();
 
-	if (previousLine.endsWith(',')) {
+	if (previousLine.match(/(,|\()$/gm)) {
 		return {
 			inline: true,
 			name: functionName,

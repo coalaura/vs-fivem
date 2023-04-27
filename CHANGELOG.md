@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.2]
+- Improve speed of statistics
+- Fix some issues with code completion in if/while/etc. statements
+
 ## [1.2.1]
 - Fix native search not working (oops)
 - Cache natives for offline usage

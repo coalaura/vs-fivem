@@ -1,5 +1,7 @@
 const vscode = require('vscode');
 
+const { findAllFunctions } = require('./search.js');
+
 let statusItem = null;
 
 function updateStatisticsStatus(document, natives) {
@@ -19,13 +21,9 @@ function updateStatisticsStatus(document, natives) {
 
 	const text = document.getText();
 
-	const count = nativeNames.filter((name, index) => {
-		return nativeNames.indexOf(name) === index;
-	}).map(native => {
-		const rgx = new RegExp(`\\b${native}\\s*\\(`, 'g');
+	const functions = findAllFunctions(text);
 
-		return (text.match(rgx) || []).length;
-	}).reduce((a, b) => a + b, 0);
+	const count = functions.filter(func => nativeNames.includes(func.name)).length;
 
 	const amount = new Intl.NumberFormat('en-US').format(count);
 
