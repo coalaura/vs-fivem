@@ -6,6 +6,7 @@ const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, li
 const { updateStatisticsStatus } = require('./statistics.js');
 const { setSearchableNatives, searchNatives, findNative } = require('./search.js');
 const { setNatives, registerWebViewProvider } = require('./view.js');
+const { createNewResource, registerContextInserts } = require('./resource.js');
 
 let natives = [],
 	aliases = {},
@@ -21,8 +22,6 @@ async function fetchNatives(url, result) {
 	const json = await getJSON(url);
 
 	if (!json) {
-		console.log('Failed to fetch natives from ' + url);
-
 		return false;
 	}
 
@@ -93,6 +92,10 @@ function activate(context) {
 			hashes = result.hashes;
 
 			context.globalState.update('natives', result);
+		} else {
+			vscode.window.showWarningMessage('Failed to update natives list.');
+
+			return;
 		}
 
 		addNativeAliases(aliases, hashes);
@@ -193,6 +196,12 @@ function activate(context) {
 		fixAllDiagnostics(nativeDiagnostics);
 	});
 
+	const createResourceCommandDisposable = vscode.commands.registerCommand('vs-fivem.createResource', folder => {
+		createNewResource(folder);
+	});
+
+	registerContextInserts(context);
+
 	registerWebViewProvider(context);
 
 	context.subscriptions.push(completionDisposable);
@@ -202,6 +211,7 @@ function activate(context) {
 	context.subscriptions.push(nativeDiagnostics);
 	context.subscriptions.push(lintFolderCommandDisposable);
 	context.subscriptions.push(fixAllCommandDisposable);
+	context.subscriptions.push(createResourceCommandDisposable);
 }
 
 // This method is called when your extension is deactivated

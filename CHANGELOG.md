@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.3]
+- Added a few helpful context actions like "New resource"
+- Added some snippets
+- Show warning message when unable to update natives
+
 ## [1.2.2]
 - Improve speed of statistics
 - Fix some issues with code completion in if/while/etc. statements

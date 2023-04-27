@@ -1,6 +1,6 @@
 # vs-fivem
 
-This extension adds FiveM native support and basic diagnostics for lua files.
+This extension adds FiveM native support, code-completions, diagnostics and helpful commands for lua files.
 
 ### Detailed native documentation
 Natives are automatically updated from the FiveM documentation.
@@ -21,6 +21,20 @@ The extension will try to detect the context of the current file (server or clie
 ![diagnostics](.github/diagnostics.png)
 
 ![replace](.github/replace.png)
+
+### Helpful snippets
+
+![snippets_1](.github/snippets_1.png)
+
+![snippets_2](.github/snippets_2.png)
+
+### Easy and quick resource generation
+
+![new_resource_1](.github/new_resource_1.png)
+
+![new_resource_2](.github/new_resource_2.png)
+
+![new_resource_3](.github/new_resource_3.png)
 
 ### Quickly find all issues in a directory and fix them with 2 clicks
 
