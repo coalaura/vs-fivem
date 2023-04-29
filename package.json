@@ -59,10 +59,6 @@
 				"title": "VS-FiveM: Create new resource"
 			},
 			{
-				"command": "vs-fivem.formatCode",
-				"title": "VS-FiveM: Re-Format Code"
-			},
-			{
 				"command": "vs-fivem.createEvent",
 				"title": "Snippets: Event Listener"
 			},

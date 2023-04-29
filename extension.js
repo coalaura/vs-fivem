@@ -197,8 +197,10 @@ function activate(context) {
 		fixAllDiagnostics(nativeDiagnostics);
 	});
 
-	const formatCodeCommandDisposable = vscode.commands.registerCommand('vs-fivem.formatCode', () => {
-		formatDocument();
+	const formattingDisposable = vscode.languages.registerDocumentFormattingEditProvider('lua', {
+		provideDocumentFormattingEdits(document) {
+			return formatDocument(document);
+		}
 	});
 
 	registerContextInserts(context);
@@ -212,7 +214,7 @@ function activate(context) {
 	context.subscriptions.push(nativeDiagnostics);
 	context.subscriptions.push(lintFolderCommandDisposable);
 	context.subscriptions.push(fixAllCommandDisposable);
-	context.subscriptions.push(formatCodeCommandDisposable);
+	context.subscriptions.push(formattingDisposable);
 }
 
 // This method is called when your extension is deactivated

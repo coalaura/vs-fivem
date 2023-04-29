@@ -48,7 +48,7 @@ function indent(code) {
     });
 
     // Newlines
-    code = code.replace(/(?<!((local )?function ?.+?|then|do|else)\s+)(^\t*((?<!else)if|for|return|while|repeat))/gm, match => {
+    code = code.replace(/(?<!((local )?function ?.+?|then|do|else)\s+)(^\t*((?<!else)if|for|return|break|while|repeat))/gm, match => {
         return '\n' + match;
     });
 
@@ -72,7 +72,7 @@ function indent(code) {
         return '\n' + match;
     });
 
-    code = code.replace(/(?<!\n|function.+|then|do|repeat|else|,|\n\t*\w+ = [^\n,]+$)\n\t*\w+ = [^\n,]+$/gm, match => {
+    code = code.replace(/(?<!\n|function.+|then|do|repeat|else|,|\n\t*\w+ = .+[^,\n]$)\n\t*\w+ = .+[^,\n]$/gm, match => {
         return '\n' + match;
     });
 
@@ -100,39 +100,21 @@ function indent(code) {
     return code;
 }
 
-function formatDocument() {
-    const editor = vscode.window.activeTextEditor,
-        document = editor ? editor.document : null;
-
-    if (!document) return;
-
-    if (document.languageId !== 'lua') {
-        vscode.window.showWarningMessage('This is not a Lua file.');
-
-        return;
-    }
-
+function formatDocument(document) {
     const text = document.getText();
 
-    vscode.window.withProgress({
-		location: vscode.ProgressLocation.Notification,
-		title: 'Formatting code...'
-	}, async () => {
-        const result = indent(text);
+    const result = indent(text);
 
-        if (!result) {
-            vscode.window.showWarningMessage('Failed to format code.');
+    if (!result) {
+        vscode.window.showWarningMessage('Failed to format code.');
 
-            return;
-        }
+        return [];
+    }
 
-        await editor.edit(editBuilder => {
-            const start = new vscode.Position(0, 0),
-                end = new vscode.Position(document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
+    const start = new vscode.Position(0, 0),
+        end = new vscode.Position(document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
 
-            editBuilder.replace(new vscode.Range(start, end), result);
-        });
-    });
+    return [vscode.TextEdit.replace(new vscode.Range(start, end), result)];
 }
 
 module.exports = {
