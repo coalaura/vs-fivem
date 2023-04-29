@@ -1,5 +1,6 @@
 const path = require('path');
 const vscode = require('vscode');
+const luaparse = require('luaparse');
 
 const { findAllFunctions } = require('./search.js');
 
@@ -9,6 +10,8 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 	if (!doc) {
 		return;
 	}
+
+	const started = Date.now();
 
 	const text = doc.getText();
 
@@ -72,6 +75,33 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 
 		diagnostics.push(diagnostic);
 	});
+
+	try {
+		luaparse.parse(text, {
+			comments: false,
+			luaVersion: '5.3'
+		});
+	} catch (e) {
+		if ('index' in e) {
+			const position = doc.positionAt(e.index);
+
+			const line = doc.lineAt(position.line).text;
+
+			const range = new vscode.Range(position.line, position.character, position.line, line.length);
+
+			const diagnostic = new vscode.Diagnostic(range, e.message, vscode.DiagnosticSeverity.Error);
+
+			diagnostic.code = 'syntax';
+
+			diagnostics.push(diagnostic);
+		}
+	}
+
+	const elapsed = Date.now() - started;
+
+	if (elapsed > 100) {
+		console.warn(`Diagnostics for ${doc.fileName} took ${elapsed}ms (>100ms)`);
+	}
 
 	nativeDiagnostics.delete(doc.uri);
 

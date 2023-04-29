@@ -18,15 +18,19 @@ function indent(code) {
         return "-- S_COMMENT";
     });
 
-    code = formatter({
-        inline: {
-            block: false,
-            table: {
-                max_field_count: 30,
-                max_field_length: 6
+    try {
+        code = formatter({
+            inline: {
+                block: false,
+                table: {
+                    max_field_count: 30,
+                    max_field_length: 6
+                }
             }
-        }
-    })(code);
+        })(code);
+    } catch (e) {
+        return false;
+    }
 
     // Fixes
     code = code.replace(/(?<=\w)"[^"]+?"($|,|])/gm, match => {
