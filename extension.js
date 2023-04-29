@@ -7,6 +7,7 @@ const { updateStatisticsStatus } = require('./statistics.js');
 const { setSearchableNatives, searchNatives, findNative } = require('./search.js');
 const { setNatives, registerWebViewProvider } = require('./view.js');
 const { createNewResource, registerContextInserts } = require('./resource.js');
+const { formatDocument } = require('./formatter.js');
 
 let natives = [],
 	aliases = {},
@@ -196,8 +197,8 @@ function activate(context) {
 		fixAllDiagnostics(nativeDiagnostics);
 	});
 
-	const createResourceCommandDisposable = vscode.commands.registerCommand('vs-fivem.createResource', folder => {
-		createNewResource(folder);
+	const formatCodeCommandDisposable = vscode.commands.registerCommand('vs-fivem.formatCode', () => {
+		formatDocument();
 	});
 
 	registerContextInserts(context);
@@ -211,7 +212,7 @@ function activate(context) {
 	context.subscriptions.push(nativeDiagnostics);
 	context.subscriptions.push(lintFolderCommandDisposable);
 	context.subscriptions.push(fixAllCommandDisposable);
-	context.subscriptions.push(createResourceCommandDisposable);
+	context.subscriptions.push(formatCodeCommandDisposable);
 }
 
 // This method is called when your extension is deactivated

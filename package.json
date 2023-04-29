@@ -58,7 +58,10 @@
 				"command": "vs-fivem.createResource",
 				"title": "VS-FiveM: Create new resource"
 			},
-
+			{
+				"command": "vs-fivem.formatCode",
+				"title": "VS-FiveM: Re-Format Code"
+			},
 			{
 				"command": "vs-fivem.createEvent",
 				"title": "Snippets: Event Listener"
@@ -131,6 +134,8 @@
 		"typescript": "^4.9.5"
 	},
 	"dependencies": {
+		"@appguru/luafmt": "^1.5.0",
+		"luaparse": "^0.3.1",
 		"marked": "^4.3.0",
 		"node-fetch": "^2.6.6"
 	}

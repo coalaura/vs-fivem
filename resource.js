@@ -150,6 +150,10 @@ function registerContextInserts(context) {
 	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.createEnsureThread', () => {
 		insertEnsureThread();
 	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.createResource', folder => {
+		createNewResource(folder);
+	}));
 }
 
 module.exports = {
