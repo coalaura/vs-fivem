@@ -97,7 +97,7 @@ function indent(code) {
         return singleLineComments.shift();
     });
 
-    return code;
+    return code.trim() + '\n';
 }
 
 function formatDocument(document) {

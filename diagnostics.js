@@ -76,6 +76,18 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 		diagnostics.push(diagnostic);
 	});
 
+	if (text !== '' && !text.endsWith('\n')) {
+		const position = doc.positionAt(text.length);
+
+		const range = new vscode.Range(position.line, position.character, position.line, position.character);
+
+		const diagnostic = new vscode.Diagnostic(range, 'File should end with a newline', vscode.DiagnosticSeverity.Information);
+
+		diagnostic.code = 'trail_newline';
+
+		diagnostics.push(diagnostic);
+	}
+
 	try {
 		luaparse.parse(text, {
 			comments: false,
@@ -146,6 +158,9 @@ function getQuickFixFromDiagnostic(document, diagnostic, returnEditOnly) {
 	} else if (id === 'newlines') {
 		message = 'Reduce newlines';
 		replace = '\n\n';
+	} else if (id === 'trail_newline') {
+		message = 'Add trailing newline';
+		replace = '\n';
 	} else {
 		const entry = knowledge.find(e => e.id === id);
 
