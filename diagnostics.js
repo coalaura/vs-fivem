@@ -89,7 +89,9 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 
 			const range = new vscode.Range(position.line, position.character, position.line, line.length);
 
-			const diagnostic = new vscode.Diagnostic(range, e.message, vscode.DiagnosticSeverity.Error);
+			const message = e.message.replace(/^\[\d+:\d+\] /, '');
+
+			const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Error);
 
 			diagnostic.code = 'syntax';
 

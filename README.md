@@ -11,12 +11,16 @@ Natives are automatically updated from the FiveM documentation.
 
 ![search](.github/search.png)
 
-### Auto-completion
+### Auto-completion & Formatter
 The extension will try to detect the context of the current file (server or client) and will prioritize natives that are available in that context.
+
+The native also provides a lua formatter, that is integrated with the other vscode formatters.
 
 ![suggestions](.github/suggestions.png)
 
 ### Diagnostics & Bad-Practice warnings
+
+![syntax](.github/syntax.png)
 
 ![diagnostics](.github/diagnostics.png)
 

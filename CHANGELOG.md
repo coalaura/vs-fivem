@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.4]
+- Added a formatter
+- Added lua syntax diagnostics
+
 ## [1.2.3]
 - Added a few helpful context actions like "New resource"
 - Added some snippets
