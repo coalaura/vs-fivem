@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.5]
+- Fix void returns adding "local retval"
+- "Organize List" context action
+
 ## [1.2.4]
 - Added a formatter
 - Added lua syntax diagnostics

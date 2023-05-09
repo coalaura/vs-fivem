@@ -1,5 +1,7 @@
 const vscode = require('vscode');
 
+const { parseList, formatList } = require('./helper.js');
+
 async function createNewResource(folder) {
 	folder = vscode.workspace.getWorkspaceFolder(folder);
 
@@ -142,6 +144,49 @@ end`;
 	await _insert(text, "Example");
 }
 
+async function organizeList() {
+	const editor = vscode.window.activeTextEditor,
+		document = editor ? editor.document : null;
+
+	if (!document) return;
+
+	const selection = editor.selection;
+
+	const text = document.getText(selection);
+
+	if (!text.trim()) return;
+
+	if (!text.startsWith('{') || !text.endsWith('}')) {
+		vscode.window.showErrorMessage('Selection must start and end with curly braces.');
+
+		return;
+	}
+
+	const eol = document.eol === vscode.EndOfLine.CRLF ? "\r\n" : "\n";
+
+	const items = text.slice(1, -1)
+		.split(eol + eol)
+		.map(group => {
+			return parseList(group);
+		});
+
+	if (items.find(group => !group) !== undefined) {
+		vscode.window.showErrorMessage('Unable to sort list. Selection has to be a list of strings and/or numbers.');
+
+		return;
+	}
+
+	let result = '{\n' + items.map(group => formatList(group, eol)).join(',' + eol + eol) + '\n}';
+
+	result = _indent(result, "\t" + document.lineAt(selection.anchor.line).text, eol).replace('\t}', '}');
+
+	const edit = new vscode.WorkspaceEdit();
+
+	edit.replace(document.uri, selection, result);
+
+	await vscode.workspace.applyEdit(edit);
+}
+
 function registerContextInserts(context) {
 	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.createEvent', () => {
 		insertNewEvent();
@@ -153,6 +198,11 @@ function registerContextInserts(context) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.createResource', folder => {
 		createNewResource(folder);
+	}));
+
+	// Not really an insert but still here
+	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.organizeList', () => {
+		organizeList();
 	}));
 }
 
