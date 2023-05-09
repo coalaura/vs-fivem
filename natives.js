@@ -112,7 +112,7 @@ function createNativeObject(data) {
 		};
 	});
 
-	if (data.results) {
+	if (data.results && data.results !== 'void') {
 		returns.unshift({
 			name: 'retval',
 			type: createLuaType(data.results)
@@ -185,6 +185,10 @@ function formatParameters(params, plain, indent, join) {
 
 // Formats the return values
 function formatReturns(returns, plain) {
+	if (returns.length === 0) {
+		return '';
+	}
+
 	return 'local ' + returns.map(ret => {
 		return (plain ? '' : '--[[ ' + ret.type + ' ]] ') + ret.name;
 	}).join(', ') + ' = ';
