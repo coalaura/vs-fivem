@@ -212,7 +212,7 @@ function getPositionContext(document, position) {
 
 	linePrefix = linePrefix.substring(0, linePrefix.length - prefix.length).trim();
 
-	if (linePrefix.match(/(,|or|and|if|while|\(|=)$/gm)) {
+	if (linePrefix.match(/(,|or|and|if|while|\(|=|{)$/gm)) {
 		return {
 			inline: true,
 			name: functionName,
