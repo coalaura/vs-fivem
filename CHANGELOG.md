@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.2.6]
+- Fix code completions not being inline on "not"
+
 ## [1.2.5]
 - Fix void returns adding "local retval"
 - "Organize List" context action
