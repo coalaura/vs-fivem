@@ -2,11 +2,11 @@ const vscode = require('vscode'),
 	fetch = require('node-fetch');
 
 const { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } = require('./natives.js');
-const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder, refreshDiagnostics, fixAllDiagnostics } = require('./diagnostics.js');
+const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder, refreshDiagnostics, fixAllDiagnostics, ignoreNativeDiagnostics } = require('./diagnostics.js');
 const { updateStatisticsStatus } = require('./statistics.js');
 const { setSearchableNatives, searchNatives, findNative } = require('./search.js');
 const { setNatives, registerWebViewProvider } = require('./view.js');
-const { createNewResource, registerContextInserts } = require('./resource.js');
+const { registerContextInserts } = require('./resource.js');
 const { formatDocument } = require('./formatter.js');
 
 let natives = [],
@@ -197,6 +197,10 @@ function activate(context) {
 		fixAllDiagnostics(nativeDiagnostics);
 	});
 
+	const ignoreNativeCommandDisposable = vscode.commands.registerCommand('vs-fivem.ignoreNative', () => {
+		ignoreNativeDiagnostics(nativeDiagnostics);
+	});
+
 	const formattingDisposable = vscode.languages.registerDocumentFormattingEditProvider('lua', {
 		provideDocumentFormattingEdits(document) {
 			return formatDocument(document);
@@ -214,6 +218,7 @@ function activate(context) {
 	context.subscriptions.push(nativeDiagnostics);
 	context.subscriptions.push(lintFolderCommandDisposable);
 	context.subscriptions.push(fixAllCommandDisposable);
+	context.subscriptions.push(ignoreNativeCommandDisposable);
 	context.subscriptions.push(formattingDisposable);
 }
 

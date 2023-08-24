@@ -104,7 +104,7 @@ function createNativeObject(data) {
 	const apiset = data.apiset || 'client',
 		name = data.name ? createNativeLuaName(data.name) : data.hash;
 
-	const invertReturnsAndParams = name.startsWith('Delete') || name.startsWith('Remove');
+	const invertReturnsAndParams = name.startsWith('Delete') || name.startsWith('Remove') || name.endsWith('AsNoLongerNeeded');
 
 	const returns = data.params.filter(param => {
 		return param.type.endsWith('*') && param.type !== 'char*';
@@ -170,7 +170,7 @@ function createNativeObject(data) {
 function getFileContext(filename) {
 	filename = path.basename(filename);
 
-	if (filename.includes('server') || filename.includes('sv_')) {
+	if (filename.includes('server') || filename.includes('sv_') || filename.includes('_sv')) {
 		return 'server';
 	}
 

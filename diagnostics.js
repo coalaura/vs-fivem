@@ -5,6 +5,8 @@ const luaparse = require('luaparse');
 const { findAllFunctions, findNative } = require('./search.js');
 const { getFileContext } = require('./natives.js');
 
+const ignoredNatives = [];
+
 let knowledge = require('./knowledge.js');
 
 function matchesSimplifiedType(type, expected, raw) {
@@ -78,9 +80,14 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 	functions.forEach(func => {
 		const native = findNative(func.name, context);
 
-		if (!native) return;
+		if (!native || ignoredNatives.includes(native.name)) return;
 
 		if (text.includes(`function ${native.name}`)) return;
+
+		const start = doc.positionAt(func.index),
+			previousLine = start.line > 1 ? doc.lineAt(start.line - 1).text : false;
+
+		if (previousLine && previousLine.includes('-- IGNORE')) return;
 
 		let index = func.index + func.name.length + 1,
 			code = text.substring(func.index, index),
@@ -116,8 +123,7 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 			const args = ast.body[0].expression.arguments;
 
 			if (args.length !== native.params.length) {
-				const start = doc.positionAt(func.index),
-					end = doc.positionAt(index - 1);
+				const end = doc.positionAt(index - 1);
 
 				const range = new vscode.Range(start.line, start.character, end.line, end.character);
 
@@ -128,8 +134,16 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 				diagnostics.push(diagnostic);
 			} else {
 				for (let x = 0; x < args.length; x++) {
-					const arg = args[x],
+					let arg = args[x],
 						param = native.params[x];
+
+					if (arg.type === 'UnaryExpression') {
+						const operator = arg.operator;
+
+						arg = arg.argument;
+
+						arg.raw = operator + arg.raw;
+					}
 
 					if (!matchesSimplifiedType(arg.type, param.type, arg.raw)) {
 						const start = doc.positionAt(func.index + arg.range[0]),
@@ -223,6 +237,8 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 	nativeDiagnostics.delete(doc.uri);
 
 	nativeDiagnostics.set(doc.uri, diagnostics);
+
+	return diagnostics.length;
 }
 
 function subscribeToDocumentChanges(context, nativeDiagnostics) {
@@ -391,7 +407,8 @@ function lintFolder(folder, nativeDiagnostics) {
 
 		if (canceled) return;
 
-		let index = 0;
+		let index = 0,
+			issueCount = 0;
 
 		for (const file of files) {
 			if (canceled) return;
@@ -405,11 +422,52 @@ function lintFolder(folder, nativeDiagnostics) {
 				message: percentage + '% - ' + path.basename(doc.fileName) + '...'
 			});
 
-			refreshDiagnostics(doc, nativeDiagnostics);
+			issueCount += refreshDiagnostics(doc, nativeDiagnostics);
 
 			index++;
 		}
+
+		if (issueCount === 0) {
+			vscode.window.showInformationMessage('No issues found.');
+		} else {
+			vscode.window.showInformationMessage(`Found ${issueCount} issue${issueCount === 1 ? '' : 's'}.`);
+		}
 	});
+}
+
+async function ignoreNativeDiagnostics(nativeDiagnostics) {
+	const editor = vscode.window.activeTextEditor,
+		document = editor ? editor.document : null;
+
+	if (!document) return;
+
+	const selection = editor.selection;
+
+	const text = document.getText(selection);
+
+	if (!text.trim()) return;
+
+	const context = getFileContext(document.fileName);
+
+	const native = findNative(text, context);
+
+	if (!native) {
+		vscode.window.showErrorMessage(`Could not find native ${text}.`);
+
+		return;
+	}
+
+	if (ignoredNatives.includes(native.name)) {
+		ignoredNatives.splice(ignoredNatives.indexOf(native.name), 1);
+
+		vscode.window.showInformationMessage(`Unignored native ${native.name}.`);
+	} else {
+		ignoredNatives.push(native.name);
+
+		vscode.window.showInformationMessage(`Ignored native ${native.name} (for this session).`);
+	}
+
+	refreshDiagnostics(document, nativeDiagnostics);
 }
 
 async function fixAllDiagnostics(nativeDiagnostics) {
@@ -470,5 +528,6 @@ module.exports = {
 	registerQuickFixHelper,
 	addNativeAliases,
 	lintFolder,
-	fixAllDiagnostics
+	fixAllDiagnostics,
+	ignoreNativeDiagnostics
 }

@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.2.9]
+- Fix more parameters sometimes ending up as returns instead
+- Add ignore native command and context action
+- Lines preceded by "-- IGNORE" are now not considered for some diagnostics
+- Fix negative numbers not being considered for diagnostics
+- Linting a whole folder will now show how many issues were found
+- Fix context being set to client if the file ended with "_sv"
+
 ## [1.2.8]
 - Fix parameters sometimes ending up as returns instead
 - Small fixes to the type and parameter count check

@@ -2,7 +2,7 @@
 	"name": "vs-fivem",
 	"displayName": "vs-fivem",
 	"description": "Adds highly detailed, in-depth, up-to-date fivem native support for lua to vs-code.",
-	"version": "1.2.8",
+	"version": "1.2.9",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
@@ -58,6 +58,10 @@
 				"title": "VS-FiveM: Fix all Diagnostics"
 			},
 			{
+				"command": "vs-fivem.ignoreNative",
+				"title": "VS-FiveM: Ignore Native"
+			},
+			{
 				"command": "vs-fivem.createResource",
 				"title": "VS-FiveM: Create new resource"
 			},
@@ -102,6 +106,11 @@
 					"when": "editorLangId == lua && editorHasSelection && !editorHasMultipleSelections",
 					"command": "vs-fivem.organizeList",
 					"group": "2_modification"
+				},
+				{
+					"when": "editorLangId == lua && editorHasSelection && !editorHasMultipleSelections",
+					"command": "vs-fivem.ignoreNative",
+					"group": "z_commands"
 				}
 			]
 		},
