@@ -2,9 +2,37 @@ const path = require('path');
 const vscode = require('vscode');
 const luaparse = require('luaparse');
 
-const { findAllFunctions } = require('./search.js');
+const { findAllFunctions, findNative } = require('./search.js');
+const { getFileContext } = require('./natives.js');
 
 let knowledge = require('./knowledge.js');
+
+function matchesSimplifiedType(type, expected, raw) {
+	expected = expected.toLowerCase();
+
+	if (["hash", "ped", "object", "player", "entity", "vehicle", "blip", "cam", "pickup", "long"].includes(expected)) {
+		expected = "integer";
+	} else if (expected.startsWith("any")) {
+		return true;
+	}
+
+	switch (type) {
+		case 'BooleanLiteral':
+			return expected === 'boolean';
+		case 'NumericLiteral':
+			if (expected === "integer") {
+				return !raw.includes('.');
+			}
+
+			return raw.includes('.');
+		case 'StringLiteral':
+			return expected === 'string';
+		case 'NilLiteral':
+			return expected === 'nil';
+	}
+
+	return true;
+}
 
 function refreshDiagnostics(doc, nativeDiagnostics) {
 	if (!doc) {
@@ -43,6 +71,85 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 
 			diagnostics.push(diagnostic);
 		});
+	});
+
+	const context = getFileContext(doc.fileName);
+
+	functions.forEach(func => {
+		const native = findNative(func.name, context);
+
+		if (!native) return;
+
+		let index = func.index + func.name.length + 1,
+			code = text.substring(func.index, index),
+			success = false;
+
+		// Get the whole function call (including arguments and nested calls)
+		while (index < text.length) {
+			const nextClosing = text.indexOf(')', index);
+
+			if (nextClosing === -1) break;
+
+			// Count the number of opening and closing brackets (fast)
+			const open = text.substring(index, nextClosing).split('(').length - 1,
+				close = text.substring(index, nextClosing).split(')').length - 1;
+
+			if (open === close) {
+				code = text.substring(func.index, nextClosing + 1);
+
+				success = true;
+
+				break;
+			}
+
+			index = nextClosing + 1;
+		}
+
+		if (!success) return;
+
+		try {
+			const ast = luaparse.parse(code, {
+				comments: false,
+				luaVersion: '5.3'
+			});
+
+			if (ast.body.length === 0 || ast.body[0].type !== 'CallStatement') {
+				return;
+			}
+
+			const args = ast.body[0].expression.arguments;
+
+			if (args.length !== native.params.length) {
+				const start = doc.positionAt(func.index),
+					end = doc.positionAt(index - 1);
+
+				const range = new vscode.Range(start.line, start.character, end.line, end.character);
+
+				const diagnostic = new vscode.Diagnostic(range, `${native.name} expects ${native.params.length} parameters instead of ${args.length}.`, vscode.DiagnosticSeverity.Warning);
+
+				diagnostic.code = "param-count";
+
+				diagnostics.push(diagnostic);
+			} else {
+				for (let x = 0; x < args.length; x++) {
+					const arg = args[x],
+						param = native.params[x];
+
+					if (!matchesSimplifiedType(arg.type, param.type, arg.raw)) {
+						const start = doc.positionAt(func.index + arg.range[0]),
+							end = doc.positionAt(func.index + arg.range[1]);
+
+						const range = new vscode.Range(start.line, start.character, end.line, end.character);
+
+						const diagnostic = new vscode.Diagnostic(range, `${native.name} expects ${param.type} for parameter ${x + 1}.`, vscode.DiagnosticSeverity.Warning);
+
+						diagnostic.code = "param-type";
+
+						diagnostics.push(diagnostic);
+					}
+				}
+			}
+		} catch (e) {}
 	});
 
 	// Trailing whitespace

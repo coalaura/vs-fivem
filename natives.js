@@ -9,21 +9,21 @@ const underscoreParts = [
 
 // Converts the native type to a Lua-friendly type
 function createLuaType(type) {
-	switch (type) {
-		case 'Vector4':
-		case 'Vector3':
-		case 'Vector2':
+	switch (type.toLowerCase()) {
+		case 'vector4':
+		case 'vector3':
+		case 'vector2':
 			return type.toLowerCase();
 		case 'float':
 			return 'number';
 		case 'int':
 			return 'integer';
-		case 'BOOL':
+		case 'bool':
 			return 'boolean';
 		case 'char':
 		case 'char*':
 			return 'string';
-		case 'Any':
+		case 'any':
 			return 'any';
 	}
 
@@ -242,5 +242,6 @@ module.exports = {
 	formatParameters,
 	formatReturns,
 	getPositionContext,
-	createNativeDocumentation
+	createNativeDocumentation,
+	getFileContext
 }

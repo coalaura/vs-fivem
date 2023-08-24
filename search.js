@@ -51,7 +51,7 @@ function findNative(name, ctx) {
     if (!natives) return false;
 
     let native = natives.find(native => {
-        return native.name === name && native.apiset === ctx;
+        return native.name === name && (!ctx || native.apiset === ctx);
     });
 
     if (!native) {
