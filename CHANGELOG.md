@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.7]
+- Check if native parameter count is correct
+- Check if basic native parameter types are correct
+
 ## [1.2.6]
 - Fix code completions not being inline on "not"
 
