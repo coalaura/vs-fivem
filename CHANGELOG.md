@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.8]
+- Fix parameters sometimes ending up as returns instead
+- Small fixes to the type and parameter count check
+
 ## [1.2.7]
 - Check if native parameter count is correct
 - Check if basic native parameter types are correct

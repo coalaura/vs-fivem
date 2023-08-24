@@ -101,7 +101,10 @@ function createNativeDocumentation(native, detailed) {
 
 // Cleans up the servers json
 function createNativeObject(data) {
-	const apiset = data.apiset || 'client';
+	const apiset = data.apiset || 'client',
+		name = data.name ? createNativeLuaName(data.name) : data.hash;
+
+	const invertReturnsAndParams = name.startsWith('Delete') || name.startsWith('Remove');
 
 	const returns = data.params.filter(param => {
 		return param.type.endsWith('*') && param.type !== 'char*';
@@ -129,6 +132,14 @@ function createNativeObject(data) {
 		};
 	});
 
+	if (invertReturnsAndParams) {
+		while (returns.length > 0) {
+			const ret = returns.pop();
+
+			params.unshift(ret);
+		}
+	}
+
 	const detail = apiset + ': ' + (returns.length === 0 ? 'void' : returns.map(ret => ret.type).join(', '));
 
 	const aliases = (data.aliases || []).map(name => {
@@ -142,7 +153,7 @@ function createNativeObject(data) {
 	return {
 		hash: data.hash,
 		original: data.name,
-		name: data.name ? createNativeLuaName(data.name) : data.hash,
+		name: name,
 		params: params,
 		returns: returns,
 		returnDescription: data.resultsDescription,

@@ -80,6 +80,8 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 
 		if (!native) return;
 
+		if (text.includes(`function ${native.name}`)) return;
+
 		let index = func.index + func.name.length + 1,
 			code = text.substring(func.index, index),
 			openingBrackets = 1;
