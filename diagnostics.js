@@ -10,9 +10,9 @@ let knowledge = require('./knowledge.js');
 function matchesSimplifiedType(type, expected, raw) {
 	expected = expected.toLowerCase();
 
-	if (["hash", "ped", "object", "player", "entity", "vehicle", "blip", "cam", "pickup", "long"].includes(expected)) {
-		expected = "integer";
-	} else if (expected.startsWith("any")) {
+	if (['hash', 'ped', 'object', 'player', 'entity', 'vehicle', 'blip', 'cam', 'pickup', 'long'].includes(expected)) {
+		expected = 'integer';
+	} else if (expected.startsWith('any')) {
 		return true;
 	}
 
@@ -20,7 +20,7 @@ function matchesSimplifiedType(type, expected, raw) {
 		case 'BooleanLiteral':
 			return expected === 'boolean';
 		case 'NumericLiteral':
-			if (expected === "integer") {
+			if (expected === 'integer') {
 				return !raw.includes('.');
 			}
 
@@ -82,30 +82,24 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 
 		let index = func.index + func.name.length + 1,
 			code = text.substring(func.index, index),
-			success = false;
+			openingBrackets = 1;
 
 		// Get the whole function call (including arguments and nested calls)
-		while (index < text.length) {
-			const nextClosing = text.indexOf(')', index);
+		while (openingBrackets > 0 && index < text.length) {
+			const char = text.charAt(index);
 
-			if (nextClosing === -1) break;
-
-			// Count the number of opening and closing brackets (fast)
-			const open = text.substring(index, nextClosing).split('(').length - 1,
-				close = text.substring(index, nextClosing).split(')').length - 1;
-
-			if (open === close) {
-				code = text.substring(func.index, nextClosing + 1);
-
-				success = true;
-
-				break;
+			if (char === '(') {
+				openingBrackets++;
+			} else if (char === ')') {
+				openingBrackets--;
 			}
 
-			index = nextClosing + 1;
+			code += char;
+
+			index++;
 		}
 
-		if (!success) return;
+		if (openingBrackets > 0) return;
 
 		try {
 			const ast = luaparse.parse(code, {
@@ -127,7 +121,7 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 
 				const diagnostic = new vscode.Diagnostic(range, `${native.name} expects ${native.params.length} parameters instead of ${args.length}.`, vscode.DiagnosticSeverity.Warning);
 
-				diagnostic.code = "param-count";
+				diagnostic.code = 'param-count';
 
 				diagnostics.push(diagnostic);
 			} else {
@@ -143,13 +137,13 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 
 						const diagnostic = new vscode.Diagnostic(range, `${native.name} expects ${param.type} for parameter ${x + 1}.`, vscode.DiagnosticSeverity.Warning);
 
-						diagnostic.code = "param-type";
+						diagnostic.code = 'param-type';
 
 						diagnostics.push(diagnostic);
 					}
 				}
 			}
-		} catch (e) {}
+		} catch (e) { }
 	});
 
 	// Trailing whitespace
@@ -256,8 +250,8 @@ function subscribeToDocumentChanges(context, nativeDiagnostics) {
 function getQuickFixFromDiagnostic(document, diagnostic, returnEditOnly) {
 	const id = diagnostic.code;
 
-	let message = "",
-		replace = "";
+	let message = '',
+		replace = '';
 
 	if (id === 'whitespace') {
 		message = 'Remove trailing whitespace';
