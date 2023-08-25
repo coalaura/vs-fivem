@@ -1,6 +1,8 @@
 const vscode = require('vscode'),
 	path = require('path');
 
+const { nativeOverrides } = require('./overrides.js');
+
 const underscoreParts = [
 	'3d',
 	'2d',
@@ -104,7 +106,7 @@ function createNativeObject(data) {
 	const apiset = data.apiset || 'client',
 		name = data.name ? createNativeLuaName(data.name) : data.hash;
 
-	const invertReturnsAndParams = name.startsWith('Delete') || name.startsWith('Remove') || name.endsWith('AsNoLongerNeeded');
+	const invertReturnsAndParams = name.startsWith('Delete') || name.startsWith('Remove') || name.endsWith('AsNoLongerNeeded') || ['DoesRopeExist', 'ClearSequenceTask'].includes(name);
 
 	const returns = data.params.filter(param => {
 		return param.type.endsWith('*') && param.type !== 'char*';
@@ -114,13 +116,6 @@ function createNativeObject(data) {
 			type: createLuaType(param.type.replace('*', ''))
 		};
 	});
-
-	if (data.results && data.results !== 'void') {
-		returns.unshift({
-			name: 'retval',
-			type: createLuaType(data.results)
-		});
-	}
 
 	const params = data.params.filter(param => {
 		return !param.type.endsWith('*') || param.type === 'char*';
@@ -140,6 +135,13 @@ function createNativeObject(data) {
 		}
 	}
 
+	if (data.results && data.results !== 'void') {
+		returns.unshift({
+			name: 'retval',
+			type: createLuaType(data.results)
+		});
+	}
+
 	const detail = apiset + ': ' + (returns.length === 0 ? 'void' : returns.map(ret => ret.type).join(', '));
 
 	const aliases = (data.aliases || []).map(name => {
@@ -150,7 +152,7 @@ function createNativeObject(data) {
 		return example.lang === 'lua';
 	}) : null;
 
-	return {
+	return nativeOverrides({
 		hash: data.hash,
 		original: data.name,
 		name: name,
@@ -163,7 +165,7 @@ function createNativeObject(data) {
 		ns: data.ns,
 		apiset: apiset,
 		aliases: aliases
-	};
+	});
 }
 
 // Gets the context of the current position (client or server)

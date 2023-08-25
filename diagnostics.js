@@ -24,9 +24,11 @@ function matchesSimplifiedType(type, expected, raw) {
 		case 'NumericLiteral':
 			if (expected === 'integer') {
 				return !raw.includes('.');
+			} else if (expected === 'number') {
+				return raw.includes('.');
 			}
 
-			return raw.includes('.');
+			return false;
 		case 'StringLiteral':
 			return expected === 'string';
 		case 'NilLiteral':

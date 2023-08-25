@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.10]
+- Fix even more parameters sometimes ending up as returns instead
+- Fix floats sometimes being accepted as other types
+- Add some custom overrides for incorrect native parameter types
+
 ## [1.2.9]
 - Fix more parameters sometimes ending up as returns instead
 - Add ignore native command and context action
