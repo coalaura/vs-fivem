@@ -187,6 +187,30 @@ async function organizeList() {
 	await vscode.workspace.applyEdit(edit);
 }
 
+async function convertResourceToFxManifest(file) {
+	if (!file || !file.fsPath || !file.fsPath.endsWith('__resource.lua')) return;
+
+	const path = file.fsPath.slice(0, -14) + 'fxmanifest.lua';
+
+	await vscode.workspace.fs.rename(file, vscode.Uri.file(path));
+
+	const buffer = await vscode.workspace.fs.readFile(vscode.Uri.file(path));
+
+	let text = buffer.toString();
+
+	text = text.replace(/^resource_manifest_version .+?$/gm, '').trim();
+
+	if (!text.match(/^games? .+?$/gm)) {
+		text = `game "gta5"\n\n${text}`;
+	}
+
+	text = `fx_version "cerulean"\n\n${text}`;
+
+	vscode.workspace.fs.writeFile(vscode.Uri.file(path), Buffer.from(text + '\n'));
+
+	vscode.window.showInformationMessage('Converted __resource.lua to fxmanifest.lua');
+}
+
 function registerContextInserts(context) {
 	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.createEvent', () => {
 		insertNewEvent();
@@ -200,6 +224,10 @@ function registerContextInserts(context) {
 		createNewResource(folder);
 	}));
 
+	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.convertFxManifest', file => {
+		convertResourceToFxManifest(file);
+	}));
+
 	// Not really an insert but still here
 	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.organizeList', () => {
 		organizeList();
@@ -207,6 +235,5 @@ function registerContextInserts(context) {
 }
 
 module.exports = {
-	createNewResource,
 	registerContextInserts
 };

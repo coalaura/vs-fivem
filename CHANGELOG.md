@@ -1,13 +1,16 @@
 # Change Log
 
+## [1.2.11]
+- Added a "Convert to fxmanifest.lua" context option for __resource.lua files
+
 ## [1.2.10]
 - Fix even more parameters sometimes ending up as returns instead
 - Fix floats sometimes being accepted as other types
-- Add some custom overrides for incorrect native parameter types
+- Added some custom overrides for incorrect native parameter types
 
 ## [1.2.9]
 - Fix more parameters sometimes ending up as returns instead
-- Add ignore native command and context action
+- Added ignore native command and context action
 - Lines preceded by "-- IGNORE" are now not considered for some diagnostics
 - Fix negative numbers not being considered for diagnostics
 - Linting a whole folder will now show how many issues were found
