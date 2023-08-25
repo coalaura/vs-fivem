@@ -232,8 +232,8 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 
 	const elapsed = Date.now() - started;
 
-	if (elapsed > 100) {
-		console.warn(`Diagnostics for ${doc.fileName} took ${elapsed}ms (>100ms)`);
+	if (elapsed > 150) {
+		console.warn(`Diagnostics for ${doc.fileName} took ${elapsed}ms (>150ms)`);
 	}
 
 	nativeDiagnostics.delete(doc.uri);
