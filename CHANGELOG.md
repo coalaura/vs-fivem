@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.2.12]
+- Fix a small issue where files named "observer" were incorrectly classed as server-side files
+
 ## [1.2.11]
 - Added a "Convert to fxmanifest.lua" context option for __resource.lua files
 
