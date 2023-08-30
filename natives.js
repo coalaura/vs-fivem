@@ -172,7 +172,7 @@ function createNativeObject(data) {
 function getFileContext(filename) {
 	filename = path.basename(filename);
 
-	if (filename.includes('server') || filename.includes('sv_') || filename.includes('_sv')) {
+	if (filename.match(/_sv|sv_|(?<!ob)server/gi)) {
 		return 'server';
 	}
 
