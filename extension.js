@@ -6,7 +6,7 @@ const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, li
 const { updateStatisticsStatus } = require('./statistics.js');
 const { setSearchableNatives, searchNatives, findNative } = require('./search.js');
 const { setNatives, registerWebViewProvider } = require('./view.js');
-const { registerContextInserts } = require('./resource.js');
+const { registerContextInserts, setContextNatives } = require('./resource.js');
 const { formatDocument } = require('./formatter.js');
 
 let natives = [],
@@ -67,6 +67,7 @@ function activate(context) {
 		addNativeAliases(aliases, hashes);
 		setSearchableNatives(natives);
 		setNatives(natives);
+		setContextNatives(natives);
 	}
 
 	const nativeDiagnostics = vscode.languages.createDiagnosticCollection("natives");

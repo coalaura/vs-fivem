@@ -1,6 +1,10 @@
+const path = require('path');
 const vscode = require('vscode');
 
 const { parseList, formatList } = require('./helper.js');
+const { findAllFunctions } = require('./search.js');
+
+let nativeList = [];
 
 async function createNewResource(folder) {
 	folder = vscode.workspace.getWorkspaceFolder(folder);
@@ -211,6 +215,102 @@ async function convertResourceToFxManifest(file) {
 	vscode.window.showInformationMessage('Converted __resource.lua to fxmanifest.lua');
 }
 
+async function collectStatistics(folder) {
+	const workspaceFolder = vscode.workspace.getWorkspaceFolder(folder);
+
+	if (!workspaceFolder) return;
+
+	const workspaceFolderPath = workspaceFolder.uri.path;
+
+	const searchFolder = path.relative(workspaceFolderPath, folder.path).replace(/\[|\]/g, '[$&]');
+
+	const searchPath = (searchFolder ? searchFolder + '/' : '') + '**/*.lua';
+
+	vscode.window.withProgress({
+		location: vscode.ProgressLocation.Notification,
+		title: 'Parsing ' + path.basename(folder.path),
+		cancellable: true
+	}, async (progress, token) => {
+		let canceled = false;
+
+		token.onCancellationRequested(() => {
+			canceled = true;
+		});
+
+		progress.report({
+			increment: 0,
+			message: 'Collecting lua files...'
+		});
+
+		const files = await vscode.workspace.findFiles(searchPath);
+
+		if (canceled) return;
+
+		const names = nativeList.map(native => native.name);
+
+		let index = 0,
+			natives = {};
+
+		for (const file of files) {
+			if (canceled) return;
+
+			const percentage = Math.floor((index / files.length) * 100),
+				message = percentage + '% - ' + path.basename(file.path);
+
+			progress.report({
+				increment: 100 / files.length,
+				message: message + ' - Reading...'
+			});
+
+			const text = await vscode.workspace.fs.readFile(file).then(buffer => {
+				return buffer.toString();
+			});
+
+			progress.report({
+				message: message + ' - Collecting...'
+			});
+
+			const functions = findAllFunctions(text).filter(func => {
+				return names.includes(func.name);
+			});
+
+			progress.report({
+				message: message + ' - Counting...'
+			});
+
+			for (const func of functions) {
+				const name = func.name,
+					count = natives[name] || 0;
+
+				natives[name] = count + 1;
+			}
+
+			index++;
+		}
+
+		const max = Math.max(...Object.values(natives)).toString().length;
+
+		natives = Object.entries(natives)
+			.map(([name, count]) => {
+				return {
+					name,
+					count
+				};
+			}).sort((a, b) => {
+				return b.count - a.count;
+			});
+
+		const text = natives.map(native => {
+			return `${native.count.toString().padStart(max, ' ')} - ${native.name}`;
+		}).join('\n');
+
+		await vscode.workspace.openTextDocument({
+			content: text,
+			language: 'plaintext'
+		});
+	});
+}
+
 function registerContextInserts(context) {
 	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.createEvent', () => {
 		insertNewEvent();
@@ -228,12 +328,21 @@ function registerContextInserts(context) {
 		convertResourceToFxManifest(file);
 	}));
 
+	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.statistics', folder => {
+		collectStatistics(folder);
+	}));
+
 	// Not really an insert but still here
 	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.organizeList', () => {
 		organizeList();
 	}));
 }
 
+function setContextNatives(natives) {
+	nativeList = natives;
+}
+
 module.exports = {
-	registerContextInserts
+	registerContextInserts,
+	setContextNatives
 };

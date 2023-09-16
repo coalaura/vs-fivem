@@ -45,30 +45,30 @@ function parseList(code) {
 }
 
 function formatList(items, eol) {
-	let result = [];
-	let line = "";
+    let result = [];
+    let line = "";
 
-	for (const item of items) {
-		const value = item.quoted ? '"' + item.value + '"' : item.value;
+    for (const item of items) {
+        const value = item.quoted ? '"' + item.value + '"' : item.value;
 
-		const length = (line + value).length;
+        const length = (line + value).length;
 
-		if (length > 100) {
-			result.push(line.trim());
+        if (length > 100) {
+            result.push(line.trim());
 
-			line = '';
-		} else {
-			line += ' ';
-		}
+            line = '';
+        } else {
+            line += ' ';
+        }
 
-		line += value + ',';
-	}
+        line += value + ',';
+    }
 
-	if (line) {
-		result.push(line.trim());
-	}
+    if (line) {
+        result.push(line.trim());
+    }
 
-	return result.join(eol).slice(0, -1);
+    return result.join(eol).slice(0, -1);
 }
 
 module.exports = {

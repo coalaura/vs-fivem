@@ -80,6 +80,10 @@
 			{
 				"command": "vs-fivem.organizeList",
 				"title": "Formatting: Organize List"
+			},
+			{
+				"command": "vs-fivem.statistics",
+				"title": "VS-FiveM: Collect Statistics"
 			}
 		],
 		"menus": {
@@ -87,6 +91,11 @@
 				{
 					"when": "explorerResourceIsFolder",
 					"command": "vs-fivem.lintFolder",
+					"group": "2_workspace"
+				},
+				{
+					"when": "explorerResourceIsFolder",
+					"command": "vs-fivem.statistics",
 					"group": "2_workspace"
 				},
 				{
