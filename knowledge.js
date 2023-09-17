@@ -31,8 +31,15 @@ module.exports = [
 	},
 	{
 		"func": "Citizen.Wait",
-		"args": /^1$/m,
-		"message": "Use Citizen.Wait(0) to wait for the next tick instead of Citizen.Wait(1)",
+		"args": /^([1-9]|[1-4][0-9])$/m,
+		"message": "You should avoid waiting less than 50ms and use 0 to wait one tick instead",
+		"replace": "Citizen.Wait(0)",
+		"type": "warning"
+	},
+	{
+		"func": "Citizen.Wait",
+		"args": /^\d+\.\d+$/m,
+		"message": "Citizen.Wait expects an integer, what you are doing is literally a sin",
 		"replace": "Citizen.Wait(0)",
 		"type": "warning"
 	},
