@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.2.13]
+- Added a "Collect Statistics" context option
+
 ## [1.2.12]
 - Fix a small issue where files named "observer" were incorrectly classed as server-side files
 
