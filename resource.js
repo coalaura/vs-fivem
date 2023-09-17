@@ -246,7 +246,10 @@ async function collectStatistics(folder) {
 
 		if (canceled) return;
 
-		const names = nativeList.map(native => native.name);
+		const names = nativeList.map(native => [
+			native.name,
+			...(native.aliases || [])
+		]).flat();
 
 		let index = 0,
 			natives = {};
