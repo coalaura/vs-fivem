@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.2.14]
+- Added some more knowledge about Citizen.Wait
+
 ## [1.2.13]
 - Added a "Collect Statistics" context option
 
