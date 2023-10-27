@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.15]
+- Improved diagnostics performance by using timeouts
+- Clear diagnostics when language id is changed
+
 ## [1.2.14]
 - Added some more knowledge about Citizen.Wait
 

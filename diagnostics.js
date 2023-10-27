@@ -38,8 +38,32 @@ function matchesSimplifiedType(type, expected, raw) {
 	return true;
 }
 
-function refreshDiagnostics(doc, nativeDiagnostics) {
+let diagnosticsTimeouts = {};
+
+function refreshDiagnosticsWithTimeout(doc, nativeDiagnostics) {
 	if (!doc) {
+		return;
+	}
+
+	const name = doc.fileName;
+
+	clearTimeout(diagnosticsTimeouts[name]);
+
+	diagnosticsTimeouts[name] = setTimeout(() => {
+		refreshDiagnosticsNow(doc, nativeDiagnostics);
+	}, 500);
+}
+
+function refreshDiagnosticsNow(doc, nativeDiagnostics) {
+	if (!doc) {
+		return;
+	}
+
+	const uri = doc.uri;
+
+	nativeDiagnostics.delete(uri);
+
+	if (doc.languageId !== 'lua') {
 		return;
 	}
 
@@ -236,9 +260,7 @@ function refreshDiagnostics(doc, nativeDiagnostics) {
 		console.warn(`Diagnostics for ${doc.fileName} took ${elapsed}ms (>150ms)`);
 	}
 
-	nativeDiagnostics.delete(doc.uri);
-
-	nativeDiagnostics.set(doc.uri, diagnostics);
+	nativeDiagnostics.set(uri, diagnostics);
 
 	return diagnostics.length;
 }
@@ -247,22 +269,20 @@ function subscribeToDocumentChanges(context, nativeDiagnostics) {
 	const activeEditor = vscode.window.activeTextEditor;
 
 	if (activeEditor && activeEditor.document.languageId === 'lua') {
-		refreshDiagnostics(activeEditor.document, nativeDiagnostics);
+		refreshDiagnosticsWithTimeout(activeEditor.document, nativeDiagnostics);
 	}
 
 	context.subscriptions.push(
 		vscode.window.onDidChangeActiveTextEditor(editor => {
-			if (editor && activeEditor.document.languageId === 'lua') {
-				refreshDiagnostics(editor.document, nativeDiagnostics);
+			if (editor) {
+				refreshDiagnosticsWithTimeout(editor.document, nativeDiagnostics);
 			}
 		})
 	);
 
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeTextDocument(e => {
-			if (e.document.languageId === 'lua') {
-				refreshDiagnostics(e.document, nativeDiagnostics)
-			}
+			refreshDiagnosticsWithTimeout(e.document, nativeDiagnostics);
 		})
 	);
 }
@@ -424,7 +444,7 @@ function lintFolder(folder, nativeDiagnostics) {
 				message: percentage + '% - ' + path.basename(doc.fileName) + '...'
 			});
 
-			issueCount += refreshDiagnostics(doc, nativeDiagnostics);
+			issueCount += refreshDiagnosticsNow(doc, nativeDiagnostics);
 
 			index++;
 		}
@@ -469,7 +489,7 @@ async function ignoreNativeDiagnostics(nativeDiagnostics) {
 		vscode.window.showInformationMessage(`Ignored native ${native.name} (for this session).`);
 	}
 
-	refreshDiagnostics(document, nativeDiagnostics);
+	refreshDiagnosticsWithTimeout(document, nativeDiagnostics);
 }
 
 async function fixAllDiagnostics(nativeDiagnostics) {
@@ -505,7 +525,7 @@ async function fixAllDiagnostics(nativeDiagnostics) {
 				const document = await vscode.workspace.openTextDocument(uri);
 
 				while (true) {
-					refreshDiagnostics(document, nativeDiagnostics);
+					refreshDiagnosticsNow(document, nativeDiagnostics);
 
 					const entries = nativeDiagnostics.get(uri);
 
@@ -525,7 +545,7 @@ async function fixAllDiagnostics(nativeDiagnostics) {
 }
 
 module.exports = {
-	refreshDiagnostics,
+	refreshDiagnosticsNow,
 	subscribeToDocumentChanges,
 	registerQuickFixHelper,
 	addNativeAliases,

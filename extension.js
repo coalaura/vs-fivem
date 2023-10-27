@@ -2,7 +2,7 @@ const vscode = require('vscode'),
 	fetch = require('node-fetch');
 
 const { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } = require('./natives.js');
-const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder, refreshDiagnostics, fixAllDiagnostics, ignoreNativeDiagnostics } = require('./diagnostics.js');
+const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder, refreshDiagnosticsNow, fixAllDiagnostics, ignoreNativeDiagnostics } = require('./diagnostics.js');
 const { updateStatisticsStatus } = require('./statistics.js');
 const { setSearchableNatives, searchNatives, findNative } = require('./search.js');
 const { setNatives, registerWebViewProvider } = require('./view.js');
@@ -116,7 +116,7 @@ function activate(context) {
 		const document = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.document : false;
 
 		updateStatisticsStatus(document, natives);
-		refreshDiagnostics(document, nativeDiagnostics);
+		refreshDiagnosticsNow(document, nativeDiagnostics);
 
 		progress.report({ increment: 100 });
 	});
