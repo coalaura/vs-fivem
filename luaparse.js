@@ -18,7 +18,7 @@ function prepareCode(pCode) {
     pCode = pCode.replace(/(?<=\w)\?(?=\.\w)/gi, "");
 
     // Unpacking named values from tables using in: local a,b,c in t
-    pCode = pCode.replace(/ in (.+?)(?=$|;)/gi, " = table.unpack($1)");
+    pCode = pCode.replace(/ in (.+?)(?=$|;)/gmi, " = table.unpack($1)");
 
     return pCode;
 }

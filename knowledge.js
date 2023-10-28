@@ -98,9 +98,9 @@ module.exports = [
 		"lua_glm": true
 	},
 	{
-		"regex": /= table\.unpack/gi,
+		"regex": /= table\.unpack\((.+?)\)(?=;|$)/gmi,
 		"message": "FiveM supports unpacking using `local a,b,c in t` syntax.",
-		"replace": "in ",
+		"replace": "in $1",
 		"type": "warning",
 		"lua_glm": true
 	}

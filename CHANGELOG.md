@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.2]
+- Fix a few issues with the lua-glm parser
+- The "in" quick fix now properly unwraps parentheses
+
 ## [1.3.1]
 - Fix the slightly borked README.md
 
