@@ -5,7 +5,7 @@
 
 ## [1.3.0]
 - Improved quick fix support, adding a lot more quick fixes
-- Lua parser now supports most [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md)
+- Lua parser now supports most of [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md)
 - Added setting to disable Lua-GLM support
 - Slightly improved settings by enabling markdown
 
