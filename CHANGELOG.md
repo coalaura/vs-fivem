@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.3]
+- Improved quick fix support, adding a lot more quick fixes
+- Lua parser now supports most [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md)
+- Added setting to disable Lua-GLM support
+- Slightly improved settings by enabling markdown
+
 ## [1.2.15]
 - Improved diagnostics performance by using timeouts
 - Clear diagnostics when language id is changed

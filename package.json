@@ -41,10 +41,15 @@
 		"configuration": {
 			"title": "VS-FiveM",
 			"properties": {
+				"vs-fivem.luaGLM": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Support and diagnose [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md) syntax like `+=`."
+				},
 				"vs-fivem.useParameterFormat": {
 					"type": "boolean",
 					"default": false,
-					"description": "Format parameters in the `pParameter` style."
+					"markdownDescription": "Format parameters in the `pParameter` style."
 				}
 			}
 		},

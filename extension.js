@@ -14,7 +14,14 @@ let natives = [],
 	hashes = {};
 
 async function getJSON(url) {
-	const response = await fetch(url);
+	const controller = new AbortController(),
+		timeout = setTimeout(() => controller.abort(), 3000);
+
+	const response = await fetch(url, {
+		signal: controller.signal
+	});
+
+	clearTimeout(timeout);
 
 	return response.json();
 }

@@ -1,4 +1,4 @@
-const luaparse = require('luaparse');
+const luaparse = require('./luaparse.js');
 
 function parseList(code) {
     code = "local list = {" + code + "}";
@@ -7,8 +7,7 @@ function parseList(code) {
 
     try {
         ast = luaparse.parse(code, {
-            comments: false,
-            luaVersion: '5.3'
+            comments: false
         });
     } catch (e) {
         return false;

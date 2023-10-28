@@ -5,6 +5,21 @@ This extension adds FiveM native support, code-completions, diagnostics and help
 ### Detailed native documentation
 Natives are automatically updated from the FiveM documentation.
 
+### Support for most of FiveM's lua extensions
+```lua
+-- Support +=, -=, *=, /=, <<=, >>=, &=, |=, and ^= operators
+test += 123
+
+-- Same as: local a, b, c = t.a, t.b, t.c
+local a, b, c in t
+
+-- Safe Navigation
+local a = t?.a?.b?.c
+
+-- GLSL style vector swizzling
+local a = t.xyz
+```
+
 ![documentation](.github/documentation.png)
 
 ### Built in search
