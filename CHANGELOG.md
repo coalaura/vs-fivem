@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.3.1]
+- Fix the slightly borked README.md
+
 ## [1.3.0]
 - Improved quick fix support, adding a lot more quick fixes
 - Lua parser now supports most [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md)

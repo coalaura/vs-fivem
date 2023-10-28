@@ -2,9 +2,6 @@
 
 This extension adds FiveM native support, code-completions, diagnostics and helpful commands for lua files.
 
-### Detailed native documentation
-Natives are automatically updated from the FiveM documentation.
-
 ### Support for most of FiveM's [lua-glm](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md) extensions
 ```lua
 -- Support +=, -=, *=, /=, <<=, >>=, &=, |=, and ^= operators
@@ -19,6 +16,11 @@ local a = t?.a?.b?.c
 -- GLSL style vector swizzling
 local a = t.xyz
 ```
+
+![glm](.github/glm.png)
+
+### Detailed native documentation
+Natives are automatically updated from the FiveM documentation.
 
 ![documentation](.github/documentation.png)
 
