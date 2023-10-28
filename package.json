@@ -2,7 +2,7 @@
 	"name": "vs-fivem",
 	"displayName": "vs-fivem",
 	"description": "Adds highly detailed, in-depth, up-to-date fivem native support for lua to vs-code.",
-	"version": "1.3",
+	"version": "1.3.0",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
