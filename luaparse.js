@@ -7,7 +7,7 @@ function _supportLuaGLM() {
     return config.get('luaGLM');
 }
 
-// Wrapper around luaparse that makes the code 5.4 compatible
+// Wrapper around luaparse that makes the code lua-glm compatible
 function prepareCode(pCode) {
     if (!_supportLuaGLM()) return pCode;
 
