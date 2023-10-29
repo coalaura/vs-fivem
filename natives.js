@@ -50,7 +50,7 @@ function createNativeLuaName(name) {
 }
 
 // Generates the hover documentation for a native
-function createNativeDocumentation(native) {
+function createNativeDocumentation(native, isSearch) {
 	// Header
 	let lines = [
 		`\`${native.ns}\` \`${native.apiset.toUpperCase()}\` [\`${native.hash}\`](https://docs.fivem.net/natives/?_${native.hash})`
@@ -75,7 +75,7 @@ function createNativeDocumentation(native) {
 	const paramList = native.params.filter(param => param.description).map(param => {
 		const desc = param.description.substring(0, 1).toUpperCase() + param.description.substring(1);
 
-		return `**\`${param.name}\`**: *${desc}*`;
+		return `${isSearch ? '- ' : ''}**\`${param.name}\`**: *${desc}*  `;
 	});
 
 	if (paramList.length > 0) {
@@ -84,11 +84,11 @@ function createNativeDocumentation(native) {
 
 	// Returns
 	if (native.returnDescription) {
-		lines.push(`**Returns:**  \n*${native.returnDescription}*`);
+		lines.push(`**Returns:**  \n${isSearch ? '- ' : ''}*${native.returnDescription}*`);
 	}
 
 	// Description
-	lines.push(native.description.replace(/(?<=\()#\\_(?=0x)/g, 'https://docs.fivem.net/natives/?_'));
+	lines.push('**Description:**  \n' + native.description.replace(/(?<=\()#\\_(?=0x)/g, 'https://docs.fivem.net/natives/?_'));
 
 	// Examples
 	const example = native.example;
