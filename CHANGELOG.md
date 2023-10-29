@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.3.4]
+- Fix bug where the lua-glm parser would incorrectly replace "in ipairs" with "table.unpack"
+
 ## [1.3.3]
 - More fixes to the lua-glm parser
 - Added info diagnostic for math.floor(x + 0.5) to math.round(x)
