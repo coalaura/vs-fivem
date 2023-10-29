@@ -28,7 +28,6 @@
 		"vscode": "^1.77.0"
 	},
 	"categories": [
-		"Formatters",
 		"Linters",
 		"Snippets",
 		"Programming Languages"
