@@ -145,7 +145,7 @@ local function ensureExampleThread()
 	end)
 end`;
 
-	await _insert(text, "Example");
+	await _insert(text, 'Example');
 }
 
 async function organizeList() {

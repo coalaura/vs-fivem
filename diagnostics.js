@@ -1,7 +1,7 @@
 const path = require('path');
 const vscode = require('vscode');
-const luaparse = require('./luaparse.js');
 
+const { isSupportingLuaGLM, parse, shiftNonGLMIndex } = require('./luaparse.js');
 const { findAllFunctions, findNative } = require('./search.js');
 const { getFileContext } = require('./natives.js');
 
@@ -59,7 +59,7 @@ function _replacement(check, replacement) {
 		return check.message;
 	}
 
-	return check.message + "\n\nFix: " + replacement;
+	return check.message + '\n\nFix: ' + replacement;
 }
 
 function _severity(check) {
@@ -98,8 +98,7 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 
 	const diagnostics = [];
 
-	const config = vscode.workspace.getConfiguration('vs-fivem'),
-		supportLuaGLM = config.get('luaGLM');
+	const supportLuaGLM = isSupportingLuaGLM();
 
 	knowledge.filter(check => {
 		return supportLuaGLM || !check.lua_glm;
@@ -182,7 +181,7 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 		if (openingBrackets > 0) return;
 
 		try {
-			const ast = luaparse.parse(code, {
+			const ast = parse(code, {
 				comments: false
 			});
 
@@ -277,12 +276,12 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 	}
 
 	try {
-		luaparse.parse(text, {
+		parse(text, {
 			comments: false
 		});
 	} catch (e) {
 		if ('index' in e) {
-			const position = doc.positionAt(luaparse.shiftNonGLMIndex(e.index)),
+			const position = doc.positionAt(shiftNonGLMIndex(text, e.index)),
 				end = doc.lineAt(position.line).range.end;
 
 			const range = new vscode.Range(position.line, position.character, end.line, end.character);
@@ -346,8 +345,8 @@ function getQuickFixFromDiagnostic(document, diagnostic, returnEditOnly) {
 	} else if (id === 'trail_newline') {
 		message = 'Add trailing newline';
 		replace = '\n';
-	} else if (dMessage.includes("\n\nFix: ")) {
-		const replacement = dMessage.split("\n\nFix: ").pop();
+	} else if (dMessage.includes('\n\nFix: ')) {
+		const replacement = dMessage.split('\n\nFix: ').pop();
 
 		message = `Replace with ${replacement}`;
 		replace = replacement;

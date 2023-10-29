@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs');
+
 const { getFileContext } = require('./natives.js');
 
 const index = {};
@@ -143,7 +144,6 @@ function registerDefinitionProvider(context) {
     context.subscriptions.push(
         vscode.workspace.onDidDeleteFiles(event => {
             for (const file of event.files) {
-                console.log("Deleted file: " + file.fsPath)
                 delete index[file.fsPath];
             }
         })

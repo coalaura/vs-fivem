@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.3.6]
+- Fixed diagnostics breaking
+- Cleaned up extension code
+- Added vector swizzle hover information
+
 ## [1.3.5]
 - Added workspace indexing to improve performance
 - Added definition provider using the workspace index

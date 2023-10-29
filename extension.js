@@ -1,13 +1,13 @@
-const vscode = require('vscode'),
-	fetch = require('node-fetch');
+const vscode = require('vscode');
+const fetch = require('node-fetch');
 
+const { isSupportingLuaGLM } = require('./luaparse.js');
 const { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } = require('./natives.js');
 const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder, refreshDiagnosticsNow, fixAllDiagnostics, ignoreNativeDiagnostics } = require('./diagnostics.js');
 const { updateStatisticsStatus } = require('./statistics.js');
 const { setSearchableNatives, searchNatives, findNative } = require('./search.js');
 const { setNatives, registerWebViewProvider } = require('./view.js');
 const { registerContextInserts, setContextNatives } = require('./resource.js');
-const { formatDocument } = require('./formatter.js');
 const { registerDefinitionProvider, buildIndex } = require('./index.js');
 
 let natives = [],
@@ -78,7 +78,7 @@ function activate(context) {
 		setContextNatives(natives);
 	}
 
-	const nativeDiagnostics = vscode.languages.createDiagnosticCollection("natives");
+	const nativeDiagnostics = vscode.languages.createDiagnosticCollection('natives');
 
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Window,
@@ -164,6 +164,21 @@ function activate(context) {
 	// hover provider
 	const hoverDisposable = vscode.languages.registerHoverProvider('lua', {
 		provideHover(document, position) {
+			// Vector swizzle support
+			if (isSupportingLuaGLM()) {
+				const wordRange = document.getWordRangeAtPosition(position, /\.[\w]+/),
+					word = document.getText(wordRange);
+
+				if (word.match(/^\.[xyz]{2,}$/m)) {
+					const swizzle = word.substring(1).split('');
+
+					const text = `\`= vec${swizzle.length}(${swizzle.join(', ')})\``;
+
+					return new vscode.Hover(text, wordRange);
+				}
+			}
+
+			// Native documentations
 			const ctx = getPositionContext(document, position);
 
 			if (!ctx.name) return;
@@ -212,12 +227,6 @@ function activate(context) {
 		ignoreNativeDiagnostics(nativeDiagnostics);
 	});
 
-	const formattingDisposable = vscode.languages.registerDocumentFormattingEditProvider('lua', {
-		provideDocumentFormattingEdits(document) {
-			return formatDocument(document);
-		}
-	});
-
 	registerDefinitionProvider(context);
 
 	registerContextInserts(context);
@@ -232,7 +241,6 @@ function activate(context) {
 	context.subscriptions.push(lintFolderCommandDisposable);
 	context.subscriptions.push(fixAllCommandDisposable);
 	context.subscriptions.push(ignoreNativeCommandDisposable);
-	context.subscriptions.push(formattingDisposable);
 }
 
 // This method is called when your extension is deactivated

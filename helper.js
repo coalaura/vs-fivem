@@ -1,12 +1,12 @@
-const luaparse = require('./luaparse.js');
+const { parse } = require('./luaparse.js');
 
 function parseList(code) {
-    code = "local list = {" + code + "}";
+    code = 'local list = {' + code + '}';
 
     let ast = false;
 
     try {
-        ast = luaparse.parse(code, {
+        ast = parse(code, {
             comments: false
         });
     } catch (e) {
@@ -45,7 +45,7 @@ function parseList(code) {
 
 function formatList(items, eol) {
     let result = [];
-    let line = "";
+    let line = '';
 
     for (const item of items) {
         const value = item.quoted ? '"' + item.value + '"' : item.value;
