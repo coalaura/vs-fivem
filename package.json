@@ -17,7 +17,8 @@
 		"native",
 		"natives",
 		"gta",
-		"script"
+		"script",
+		"glm"
 	],
 	"repository": {
 		"type": "git",
