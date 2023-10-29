@@ -1,18 +1,23 @@
 # Change Log
 
+## [1.3.5]
+- Added workspace indexing to improve performance
+- Added definition provider using the workspace index
+- Improved performance of diagnostics
+
 ## [1.3.4]
-- Fix bug where the lua-glm parser would incorrectly replace "in ipairs" with "table.unpack"
+- Fixed bug where the lua-glm parser would incorrectly replace "in ipairs" with "table.unpack"
 
 ## [1.3.3]
 - More fixes to the lua-glm parser
 - Added info diagnostic for math.floor(x + 0.5) to math.round(x)
 
 ## [1.3.2]
-- Fix a few issues with the lua-glm parser
+- Fixed a few issues with the lua-glm parser
 - The "in" quick fix now properly unwraps parentheses
 
 ## [1.3.1]
-- Fix the slightly borked README.md
+- Fixed the slightly borked README.md
 
 ## [1.3.0]
 - Improved quick fix support, adding a lot more quick fixes
@@ -31,26 +36,26 @@
 - Added a "Collect Statistics" context option
 
 ## [1.2.12]
-- Fix a small issue where files named "observer" were incorrectly classed as server-side files
+- Fixed a small issue where files named "observer" were incorrectly classed as server-side files
 
 ## [1.2.11]
 - Added a "Convert to fxmanifest.lua" context option for __resource.lua files
 
 ## [1.2.10]
-- Fix even more parameters sometimes ending up as returns instead
-- Fix floats sometimes being accepted as other types
+- Fixed even more parameters sometimes ending up as returns instead
+- Fixed floats sometimes being accepted as other types
 - Added some custom overrides for incorrect native parameter types
 
 ## [1.2.9]
-- Fix more parameters sometimes ending up as returns instead
+- Fixed more parameters sometimes ending up as returns instead
 - Added ignore native command and context action
 - Lines preceded by "-- IGNORE" are now not considered for some diagnostics
-- Fix negative numbers not being considered for diagnostics
+- Fixed negative numbers not being considered for diagnostics
 - Linting a whole folder will now show how many issues were found
-- Fix context being set to client if the file ended with "_sv"
+- Fixed context being set to client if the file ended with "_sv"
 
 ## [1.2.8]
-- Fix parameters sometimes ending up as returns instead
+- Fixed parameters sometimes ending up as returns instead
 - Small fixes to the type and parameter count check
 
 ## [1.2.7]
@@ -58,10 +63,10 @@
 - Check if basic native parameter types are correct
 
 ## [1.2.6]
-- Fix code completions not being inline on "not"
+- Fixed code completions not being inline on "not"
 
 ## [1.2.5]
-- Fix void returns adding "local retval"
+- Fixed void returns adding "local retval"
 - "Organize List" context action
 
 ## [1.2.4]
@@ -75,40 +80,40 @@
 
 ## [1.2.2]
 - Improve speed of statistics
-- Fix some issues with code completion in if/while/etc. statements
+- Fixed some issues with code completion in if/while/etc. statements
 
 ## [1.2.1]
-- Fix native search not working (oops)
+- Fixed native search not working (oops)
 - Cache natives for offline usage
 
 ## [1.2.0]
 - Added a built in search tab
-- Fixed inline native reference links not working
+- Fixeded inline native reference links not working
 
 ## [1.1.1]
 - Added a check for excessive newlines
 - "Fix all Diagnostics" will now properly fix **ALL** diagnostics
-- Fixed "Lint Folder" not working on the root folder
+- Fixeded "Lint Folder" not working on the root folder
 - Only run diagnostics on lua files
 
 ## [1.1.0]
 - Massively improved completion and diagnostic speed
 - Added "Fix all Diagnostics" command
 - Added trailing whitespace detection
-- Fixed "Lint Folder" not working on directories including "[]"
+- Fixeded "Lint Folder" not working on directories including "[]"
 
 ## [1.0.5]
 - Added `vs-fivem.lintFolder` command to lint all files in a folder
 - Added explorer context menu option to lint a folder
 - Improved performance of linting
-- Fixed bug where some natives aliases were the same as their current name
+- Fixeded bug where some natives aliases were the same as their current name
 
 ## [1.0.4]
 - Searching for natives including the search string not only ones that start with it
 
 ## [1.0.3]
 - Using a natives hash (e.g. `N_0xD716F30D8C8980E2`) instead of its name will now highlight it as a warning
-- Fixed certain custom functions being highlighted as warnings
+- Fixeded certain custom functions being highlighted as warnings
 
 ## [1.0.2]
 - Old native aliases are now highlighted as warnings
