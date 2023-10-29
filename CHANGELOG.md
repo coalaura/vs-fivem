@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.7]
+- Cleaned up extension code some more
+- Improved the extensions display name
+
 ## [1.3.6]
 - Fixed diagnostics breaking
 - Cleaned up extension code

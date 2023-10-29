@@ -1,4 +1,4 @@
-# vs-fivem
+# VS FiveM IntelliSense
 
 This extension adds FiveM native support, code-completions, diagnostics and helpful commands for lua files.
 
