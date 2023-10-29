@@ -4,6 +4,7 @@
 - Added workspace indexing to improve performance
 - Added definition provider using the workspace index
 - Improved performance of diagnostics
+- Improved and extended native hover information
 
 ## [1.3.4]
 - Fixed bug where the lua-glm parser would incorrectly replace "in ipairs" with "table.unpack"
