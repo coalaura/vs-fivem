@@ -8,6 +8,7 @@ const { setSearchableNatives, searchNatives, findNative } = require('./search.js
 const { setNatives, registerWebViewProvider } = require('./view.js');
 const { registerContextInserts, setContextNatives } = require('./resource.js');
 const { formatDocument } = require('./formatter.js');
+const { registerDefinitionProvider, buildIndex } = require('./index.js');
 
 let natives = [],
 	aliases = {},
@@ -128,6 +129,8 @@ function activate(context) {
 		progress.report({ increment: 100 });
 	});
 
+	buildIndex();
+
 	// completion provider
 	const completionDisposable = vscode.languages.registerCompletionItemProvider('lua', {
 		provideCompletionItems(document, position) {
@@ -214,6 +217,8 @@ function activate(context) {
 			return formatDocument(document);
 		}
 	});
+
+	registerDefinitionProvider(context);
 
 	registerContextInserts(context);
 

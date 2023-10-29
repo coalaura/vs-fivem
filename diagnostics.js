@@ -114,10 +114,7 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 			Array.from(matches).forEach(match => {
 				const position = doc.positionAt(match.index);
 
-				const start = luaparse.fixColumnOffsetLine(doc.lineAt(position.line), position.character),
-					end = start + match[0].length;
-
-				const range = new vscode.Range(position.line, start, position.line, end);
+				const range = new vscode.Range(position.line, position.character, position.line, position.character + match[0].length);
 
 				const replacement = text.substring(match.index, match.index + match[0].length).replace(regex, check.replace);
 
@@ -133,13 +130,10 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 			});
 
 			found.forEach(func => {
-				const position = doc.positionAt(func.index);
+				const position = doc.positionAt(func.index),
+					offset = (args ? func.match : func.name).length;
 
-				const start = luaparse.fixColumnOffsetLine(doc.lineAt(position.line), position.character),
-					offset = (args ? func.match : func.name).length,
-					end = start + offset;
-
-				const range = new vscode.Range(position.line, start, position.line, end);
+				const range = new vscode.Range(position.line, position.character, position.line, position.character + offset);
 
 				const replacement = check.replace ? check.replace.replace(/\$0/g, func.params.match(args).shift() || '') : false;
 
@@ -201,10 +195,7 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 			if (args.length !== native.params.length) {
 				const end = doc.positionAt(index - 1);
 
-				const startCol = luaparse.fixColumnOffsetLine(doc.lineAt(start.line), start.character),
-					endCol = luaparse.fixColumnOffsetLine(doc.lineAt(end.line), end.character);
-
-				const range = new vscode.Range(start.line, startCol, end.line, endCol);
+				const range = new vscode.Range(start.line, start.column, end.line, end.column);
 
 				const diagnostic = new vscode.Diagnostic(range, `${native.name} expects ${native.params.length} parameters instead of ${args.length}.`, vscode.DiagnosticSeverity.Warning);
 
@@ -228,10 +219,7 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 						const start = doc.positionAt(func.index + arg.range[0]),
 							end = doc.positionAt(func.index + arg.range[1]);
 
-						const startCol = luaparse.fixColumnOffsetLine(doc.lineAt(start.line), start.character),
-							endCol = luaparse.fixColumnOffsetLine(doc.lineAt(end.line), end.character);
-
-						const range = new vscode.Range(start.line, startCol, end.line, endCol);
+						const range = new vscode.Range(start.line, start.column, end.line, end.column);
 
 						const diagnostic = new vscode.Diagnostic(range, `${native.name} expects ${param.type} for parameter ${x + 1}.`, vscode.DiagnosticSeverity.Warning);
 
@@ -248,12 +236,10 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 	let matches = text.matchAll(/[ \t]+$/gm);
 
 	Array.from(matches).forEach(match => {
-		const position = doc.positionAt(match.index);
+		const position = doc.positionAt(match.index),
+			end = doc.positionAt(match.index + match[0].length);
 
-		const startCol = luaparse.fixColumnOffsetLine(doc.lineAt(position.line), position.character),
-			endCol = luaparse.fixColumnOffsetLine(doc.lineAt(position.line), position.character + match[0].length);
-
-		const range = new vscode.Range(position.line, startCol, position.line, endCol);
+		const range = new vscode.Range(position.line, position.column, end.line, end.character);
 
 		const diagnostic = new vscode.Diagnostic(range, 'Trailing whitespace', vscode.DiagnosticSeverity.Warning);
 
@@ -269,10 +255,7 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 		const start = doc.positionAt(match.index),
 			end = doc.positionAt(match.index + match[0].length);
 
-		const startCol = luaparse.fixColumnOffsetLine(doc.lineAt(start.line), start.character),
-			endCol = luaparse.fixColumnOffsetLine(doc.lineAt(end.line), end.character);
-
-		const range = new vscode.Range(start.line, startCol, end.line, endCol);
+		const range = new vscode.Range(start.line, start.column, end.line, end.column);
 
 		const diagnostic = new vscode.Diagnostic(range, 'Avoid excessive newlines', vscode.DiagnosticSeverity.Information);
 
@@ -299,14 +282,10 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 		});
 	} catch (e) {
 		if ('index' in e) {
-			const lineNum = e.line - 1;
+			const position = doc.positionAt(luaparse.shiftNonGLMIndex(e.index)),
+				end = doc.lineAt(position.line).range.end;
 
-			const line = doc.lineAt(lineNum).text;
-
-			const startCol = luaparse.fixColumnOffsetLineReverse(doc.lineAt(lineNum), e.column),
-				endCol = luaparse.fixColumnOffsetLineReverse(doc.lineAt(lineNum), line.length);
-
-			const range = new vscode.Range(lineNum, startCol, lineNum, endCol);
+			const range = new vscode.Range(position.line, position.character, end.line, end.character);
 
 			const message = e.message.replace(/^\[\d+:\d+\] /, '');
 

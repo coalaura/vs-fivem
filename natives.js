@@ -176,6 +176,10 @@ function getFileContext(filename) {
 		return 'server';
 	}
 
+	if (filename.match(/shared/gi)) {
+		return 'shared';
+	}
+
 	return 'client';
 }
 

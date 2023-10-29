@@ -44,72 +44,17 @@ function parse(pCode, pOptions = {}) {
     return parser.parse(pCode, pOptions);
 }
 
-function fixColumnOffset(pCode, pLine, pColumn) {
-    if (!_supportLuaGLM()) return pColumn;
+function shiftNonGLMIndex(pCode, pIndex) {
+    if (!_supportLuaGLM()) return pIndex;
 
-    const lines = pCode.split(/\r?\n/);
+    const before = pCode.substring(0, pIndex + 1),
+        fixed = prepareCode(before);
 
-    if (lines.length >= pLine) return false;
-
-    const line = lines[pLine - 1];
-
-    return fixColumnOffsetLine(line, pColumn);
-}
-
-function fixColumnOffsetLine(pLine, pColumn) {
-    if (!_supportLuaGLM()) return pColumn;
-
-    let offset = 0,
-        line = "";
-
-    for (let i = 0; i < pLine.length && i + offset <= pColumn; i++) {
-        const char = pLine[i];
-
-        line += char;
-
-        const fixed = prepareCode(line);
-
-        if (fixed !== line) {
-            offset += fixed.length - line.length;
-
-            if (fixed.includes("table.unpack")) offset -= 1;
-
-            line = fixed;
-        }
-    }
-
-    return pColumn - offset;
-}
-
-function fixColumnOffsetLineReverse(pLine, pColumn) {
-    if (!_supportLuaGLM()) return pColumn;
-
-    let offset = 0,
-        line = "";
-
-    for (let i = 0; i < pLine.length && i + offset <= pColumn; i++) {
-        const char = pLine[i];
-
-        line += char;
-
-        const fixed = prepareCode(line);
-
-        if (fixed !== line) {
-            offset -= fixed.length - line.length;
-
-            if (fixed.includes("table.unpack")) offset += 1;
-
-            line = fixed;
-        }
-    }
-
-    return pColumn - offset;
+    return pIndex + (before.length - fixed.length);
 }
 
 module.exports = {
     parse,
     prepareCode,
-    fixColumnOffset,
-    fixColumnOffsetLine,
-    fixColumnOffsetLineReverse
+    shiftNonGLMIndex
 };
