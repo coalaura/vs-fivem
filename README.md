@@ -24,6 +24,11 @@ Natives are automatically updated from the FiveM documentation.
 
 ![documentation](.github/documentation.png)
 
+### Definition provider
+You can jump to the definition of any function you defined in your code by holding CTRL and clicking on the function name.
+
+![definitions](.github/definitions.png)
+
 ### Built in search
 
 ![search](.github/search.png)
