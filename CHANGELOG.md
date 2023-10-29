@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.3]
+- More fixes to the lua-glm parser
+- Added info diagnostic for math.floor(x + 0.5) to math.round(x)
+
 ## [1.3.2]
 - Fix a few issues with the lua-glm parser
 - The "in" quick fix now properly unwraps parentheses

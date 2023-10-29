@@ -15,7 +15,7 @@ function prepareCode(pCode) {
     pCode = pCode.replace(/([\w.]+) ([+\-*/&|^]|<<|>>)=/gi, "$1 = $1 $2");
 
     // Safe Navigation: t?.x?.y == nil
-    pCode = pCode.replace(/(?<=\w)\?(?=\.\w)/gi, "");
+    pCode = pCode.replace(/(?<=[\w\]])\?(?=\.\w|\[)/gi, "");
 
     // Unpacking named values from tables using in: local a,b,c in t
     pCode = pCode.replace(/ in (.+?)(?=$|;)/gmi, " = table.unpack($1)");

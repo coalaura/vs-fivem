@@ -62,6 +62,21 @@ function _replacement(check, replacement) {
 	return check.message + "\n\nFix: " + replacement;
 }
 
+function _severity(check) {
+	switch (check.type) {
+		case 'error':
+			return vscode.DiagnosticSeverity.Error;
+		case 'warning':
+			return vscode.DiagnosticSeverity.Warning;
+		case 'info':
+			return vscode.DiagnosticSeverity.Information;
+		case 'hint':
+			return vscode.DiagnosticSeverity.Hint;
+	}
+
+	return vscode.DiagnosticSeverity.Error;
+}
+
 function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 	if (!doc) {
 		return;
@@ -104,11 +119,9 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 
 				const range = new vscode.Range(position.line, start, position.line, end);
 
-				const severity = check.type === 'warning' ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Information;
-
 				const replacement = text.substring(match.index, match.index + match[0].length).replace(regex, check.replace);
 
-				const diagnostic = new vscode.Diagnostic(range, _replacement(check, replacement), severity);
+				const diagnostic = new vscode.Diagnostic(range, _replacement(check, replacement), _severity(check));
 
 				diagnostic.code = check.id;
 
@@ -128,11 +141,9 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 
 				const range = new vscode.Range(position.line, start, position.line, end);
 
-				const severity = check.type === 'warning' ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Information;
+				const replacement = check.replace ? check.replace.replace(/\$0/g, func.params.match(args).shift() || '') : false;
 
-				const replacement = check.replace ? check.replace.replace(/\$0/g, func.params.match(args)) : false;
-
-				const diagnostic = new vscode.Diagnostic(range, _replacement(check, replacement), severity);
+				const diagnostic = new vscode.Diagnostic(range, _replacement(check, replacement), _severity(check));
 
 				diagnostic.code = check.id;
 
