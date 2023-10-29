@@ -1,8 +1,5 @@
 # Change Log
 
-## [1.3.5]
-- Improved regexes in the lua-glm parser
-
 ## [1.3.4]
 - Fix bug where the lua-glm parser would incorrectly replace "in ipairs" with "table.unpack"
 
