@@ -96,7 +96,7 @@ class Provider {
 
                     this.viewer.title = native.name;
 
-                    const markdown = createNativeDocumentation(native, true).join('\n\n');
+                    const markdown = createNativeDocumentation(native).join('\n\n');
 
                     this.viewer.webview.html = template.replace('{html}', marked.parse(markdown));
                 }

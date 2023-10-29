@@ -50,12 +50,13 @@ function createNativeLuaName(name) {
 }
 
 // Generates the hover documentation for a native
-function createNativeDocumentation(native, detailed) {
+function createNativeDocumentation(native) {
+	// Header
 	let lines = [
-		`Namespace: **${native.ns}** - API set: **${native.apiset}**`,
-		`[${native.hash}](https://docs.fivem.net/natives/?_${native.hash})`
+		`\`${native.ns}\` \`${native.apiset.toUpperCase()}\` [\`${native.hash}\`](https://docs.fivem.net/natives/?_${native.hash})`
 	];
 
+	// Function definition
 	const params = native.params.length > 0 ? '\n' + formatParameters(native.params, false, '    ', ',\n') + '\n' : '';
 
 	const returns = native.returns.length > 0 ? formatReturns(native.returns) : '';
@@ -70,32 +71,30 @@ function createNativeDocumentation(native, detailed) {
 
 	lines.push('```lua\n' + documentation.join('\n') + '\n```');
 
-	if (detailed) {
-		const params = native.params.map(param => {
-			return `|${param.name}|${param.type}|${param.description || '-'}|`;
-		}).join('\n');
+	// Parameters
+	const paramList = native.params.filter(param => param.description).map(param => {
+		const desc = param.description.substring(0, 1).toUpperCase() + param.description.substring(1);
 
-		lines.push('|Parameter|Type|Description|\n|---|---|---|\n' + params);
+		return `**\`${param.name}\`**: *${desc}*`;
+	});
 
-		if (native.returnDescription) {
-			const description = native.returnDescription[0].toLowerCase() + native.returnDescription.slice(1);
-
-			lines.push(`Returns ${description}`);
-		}
-
-		lines.push('---');
+	if (paramList.length > 0) {
+		lines.push(`**Parameters:**  \n${paramList.join('\n')}`);
 	}
 
+	// Returns
+	if (native.returnDescription) {
+		lines.push(`**Returns:**  \n*${native.returnDescription}*`);
+	}
+
+	// Description
 	lines.push(native.description.replace(/(?<=\()#\\_(?=0x)/g, 'https://docs.fivem.net/natives/?_'));
 
-	if (detailed) {
-		const example = native.example;
+	// Examples
+	const example = native.example;
 
-		if (example) {
-			lines.push('---');
-
-			lines.push('**Example:**\n```lua\n' + example + '\n```');
-		}
+	if (example) {
+		lines.push('**Example:**\n```lua\n' + example + '\n```');
 	}
 
 	return lines;
