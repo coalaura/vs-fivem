@@ -88,15 +88,6 @@ module.exports = [
 		'type': 'warning'
 	},
 
-	// Some hints for slightly bad practices
-	{
-		'func': 'math.floor',
-		'args': /.+?(?=\s*\+\s*0\.5$)/m,
-		'message': 'You can use math.round instead of math.floor(x + 0.5).',
-		'replace': 'math.round($0)',
-		'type': 'info'
-	},
-
 	// Lua-GLM extensions
 	// See: https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md
 	{
