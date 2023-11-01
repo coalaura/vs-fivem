@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.3.8]
+- Removed "math.round" suggestion since it doesn't actually return an integer so math.floor(n + 0.5) ~= math.round(n)
+
 ## [1.3.7]
 - Cleaned up extension code some more
 - Improved the extensions display name
