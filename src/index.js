@@ -91,14 +91,16 @@ function resolveDocumentDefinition(document, position) {
     const functions = _getFunctionsInContext(fileName, resource, context);
 
     const wordRange = document.getWordRangeAtPosition(position, /[\w.:]+/),
-        word = document.getText(wordRange);
+        word = wordRange ? document.getText(wordRange) : false;
+
+    if (!word) return null;
 
     // Don't resolve if we hovered over the base of a member access.
     if (word.includes('.') || word.includes(':')) {
         const base = word.split(/\.|:/).shift();
 
         const partRange = document.getWordRangeAtPosition(position, /[\w]+/),
-            part = document.getText(partRange);
+            part = partRange ? document.getText(partRange) : false;
 
         if (base === part) return null;
     }

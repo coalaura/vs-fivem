@@ -1,14 +1,14 @@
 import vscode from 'vscode';
 import fetch from 'node-fetch';
 
-import { isSupportingLuaGLM } from './luaparse.js';
-import { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } from './natives.js';
+import { createNativeObject, formatParameters, formatReturns, getPositionContext } from './natives.js';
 import { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder, refreshDiagnosticsNow, fixAllDiagnostics, ignoreNativeDiagnostics } from './diagnostics.js';
 import { updateStatisticsStatus } from './statistics.js';
-import { setSearchableNatives, searchNatives, findNative } from './search.js';
+import { setSearchableNatives, searchNatives } from './search.js';
 import { setNatives, registerWebViewProvider } from './view.js';
 import { registerContextInserts, setContextNatives } from './resource.js';
 import { registerDefinitionProvider, buildIndex } from './index.js';
+import { registerHoverProvider } from './hover.js';
 
 let natives = [],
 	aliases = {},
@@ -161,36 +161,6 @@ export function activate(context) {
 		}
 	});
 
-	// hover provider
-	const hoverDisposable = vscode.languages.registerHoverProvider('lua', {
-		provideHover(document, position) {
-			// Vector swizzle support
-			if (isSupportingLuaGLM()) {
-				const wordRange = document.getWordRangeAtPosition(position, /\.[\w]+/),
-					word = document.getText(wordRange);
-
-				if (word.match(/^\.[xyz]{2,}$/m)) {
-					const swizzle = word.substring(1).split('');
-
-					const text = `\`= vec${swizzle.length}(${swizzle.join(', ')})\``;
-
-					return new vscode.Hover(text, wordRange);
-				}
-			}
-
-			// Native documentations
-			const ctx = getPositionContext(document, position);
-
-			if (!ctx.name) return;
-
-			const native = findNative(ctx.name, ctx.ctx);
-
-			if (!native) return;
-
-			return new vscode.Hover(createNativeDocumentation(native));
-		}
-	});
-
 	let changeTextTimeout = null;
 
 	const changeEditorDisposable = vscode.window.onDidChangeActiveTextEditor(editor => {
@@ -214,6 +184,7 @@ export function activate(context) {
 	subscribeToDocumentChanges(context, nativeDiagnostics);
 
 	registerQuickFixHelper(context);
+	registerHoverProvider(context);
 
 	const lintFolderCommandDisposable = vscode.commands.registerCommand('vs-fivem.lintFolder', folder => {
 		lintFolder(folder, nativeDiagnostics);
@@ -234,7 +205,6 @@ export function activate(context) {
 	registerWebViewProvider(context);
 
 	context.subscriptions.push(completionDisposable);
-	context.subscriptions.push(hoverDisposable);
 	context.subscriptions.push(changeEditorDisposable);
 	context.subscriptions.push(changeTextDisposable);
 	context.subscriptions.push(nativeDiagnostics);

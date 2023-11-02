@@ -160,7 +160,7 @@
 	"scripts": {
 		"lint": "eslint .",
 		"build": "npm run esbuild && vsce package",
-		"esbuild": "node esbuild.config.js --minify",
+		"esbuild": "node esbuild.config.js",
 		"watch": "node esbuild.config.js --watch"
 	},
 	"devDependencies": {
