@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.0]
+- Converted code to ES modules
+- New library for glm code parsing
+- Added esbuild config
+
 ## [1.3.8]
 - Removed "math.round" suggestion since it doesn't actually return an integer so math.floor(n + 0.5) ~= math.round(n)
 
