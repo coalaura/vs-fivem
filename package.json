@@ -51,6 +51,16 @@
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "Format parameters in the `pParameter` style."
+				},
+				"vs-fivem.colorPatterns": {
+					"type": "array",
+					"default": [
+						"#[0-9a-f]{3,8}",
+						"{r = \\d+, g = \\d+, b = \\d+(, a = \\d+)?",
+						"{\\d+, \\d+, \\d+(, \\d+)?}",
+						"(\\w+[:.])?rgb?\\(\\d+, \\d+, \\d+(, \\d+)?\\)"
+					],
+					"markdownDescription": "Custom regex patterns for Lua color highlighting. Must be a valid regex string. Flags are always `gmi`."
 				}
 			}
 		},

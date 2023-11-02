@@ -9,6 +9,7 @@ import { setNatives, registerWebViewProvider } from './view.js';
 import { registerContextInserts, setContextNatives } from './resource.js';
 import { registerDefinitionProvider, buildIndex } from './index.js';
 import { registerHoverProvider } from './hover.js';
+import { registerColorProvider } from './colors.js';
 
 let natives = [],
 	aliases = {},
@@ -183,8 +184,6 @@ export function activate(context) {
 
 	subscribeToDocumentChanges(context, nativeDiagnostics);
 
-	registerQuickFixHelper(context);
-	registerHoverProvider(context);
 
 	const lintFolderCommandDisposable = vscode.commands.registerCommand('vs-fivem.lintFolder', folder => {
 		lintFolder(folder, nativeDiagnostics);
@@ -199,10 +198,11 @@ export function activate(context) {
 	});
 
 	registerDefinitionProvider(context);
-
 	registerContextInserts(context);
-
 	registerWebViewProvider(context);
+	registerQuickFixHelper(context);
+	registerHoverProvider(context);
+	registerColorProvider(context);
 
 	context.subscriptions.push(completionDisposable);
 	context.subscriptions.push(changeEditorDisposable);
