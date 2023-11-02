@@ -15,6 +15,12 @@ local a = t?.a?.b?.c
 
 -- GLSL style vector swizzling
 local a = t.xyz
+
+-- C-Style Comments
+/* This is a comment */
+
+-- Compile Time Jenkins' Hashes
+`Hello, World!` -- 1395890823
 ```
 
 ![glm](.github/glm.png)
@@ -33,12 +39,17 @@ You can jump to the definition of any function you defined in your code by holdi
 
 ![search](.github/search.png)
 
-### Auto-completion & Formatter
+### Auto-completion
 The extension will try to detect the context of the current file (server or client) and will prioritize natives that are available in that context.
 
-The native also provides a lua formatter, that is integrated with the other vscode formatters.
-
 ![suggestions](.github/suggestions.png)
+
+### Hover support
+The extension will show a preview of a hash function when hovering over it. With lua-glm enabled it also provides hover suggestions for vector swizzling.
+
+![joaat](.github/joaat.png)
+
+![swizzle](.github/swizzle.png)
 
 ### Diagnostics & Bad-Practice warnings
 
