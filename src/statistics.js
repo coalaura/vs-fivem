@@ -1,10 +1,10 @@
-const vscode = require('vscode');
+import vscode from 'vscode';
 
-const { findAllFunctions } = require('./search.js');
+import { findAllFunctions } from './search.js';
 
 let statusItem = null;
 
-function updateStatisticsStatus(document, natives) {
+export function updateStatisticsStatus(document, natives) {
 	if (!document || document.languageId !== 'lua') {
 		if (statusItem) {
 			statusItem.hide();
@@ -32,7 +32,3 @@ function updateStatisticsStatus(document, natives) {
 
 	statusItem.show();
 }
-
-module.exports = {
-	updateStatisticsStatus
-};

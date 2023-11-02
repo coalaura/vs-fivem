@@ -1,8 +1,8 @@
-const path = require('path');
-const vscode = require('vscode');
+import vscode from 'vscode';
+import { relative, basename } from 'path';
 
-const { parseList, formatList } = require('./helper.js');
-const { findAllFunctions } = require('./search.js');
+import { parseList, formatList } from './helper.js';
+import { findAllFunctions } from './search.js';
 
 let nativeList = [];
 
@@ -222,13 +222,13 @@ async function collectStatistics(folder) {
 
 	const workspaceFolderPath = workspaceFolder.uri.path;
 
-	const searchFolder = path.relative(workspaceFolderPath, folder.path).replace(/\[|\]/g, '[$&]');
+	const searchFolder = relative(workspaceFolderPath, folder.path).replace(/\[|\]/g, '[$&]');
 
 	const searchPath = (searchFolder ? searchFolder + '/' : '') + '**/*.lua';
 
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,
-		title: 'Parsing ' + path.basename(folder.path),
+		title: 'Parsing ' + basename(folder.path),
 		cancellable: true
 	}, async (progress, token) => {
 		let canceled = false;
@@ -258,7 +258,7 @@ async function collectStatistics(folder) {
 			if (canceled) return;
 
 			const percentage = Math.floor((index / files.length) * 100),
-				message = percentage + '% - ' + path.basename(file.path);
+				message = percentage + '% - ' + basename(file.path);
 
 			progress.report({
 				increment: 100 / files.length,
@@ -314,7 +314,7 @@ async function collectStatistics(folder) {
 	});
 }
 
-function registerContextInserts(context) {
+export function registerContextInserts(context) {
 	context.subscriptions.push(vscode.commands.registerCommand('vs-fivem.createEvent', () => {
 		insertNewEvent();
 	}));
@@ -341,11 +341,6 @@ function registerContextInserts(context) {
 	}));
 }
 
-function setContextNatives(natives) {
+export function setContextNatives(natives) {
 	nativeList = natives;
 }
-
-module.exports = {
-	registerContextInserts,
-	setContextNatives
-};

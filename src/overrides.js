@@ -1,5 +1,5 @@
 // These overrides are based on research and testing
-function nativeOverrides(native) {
+export function nativeOverrides(native) {
     switch (native.name) {
         case 'SetFacialIdleAnimOverride':
             native.params[2].type = 'boolean';
@@ -14,7 +14,3 @@ function nativeOverrides(native) {
 
     return native;
 }
-
-module.exports = {
-    nativeOverrides
-};

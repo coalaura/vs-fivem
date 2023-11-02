@@ -1,13 +1,12 @@
-const path = require('path');
-const vscode = require('vscode');
+import { relative, basename } from 'path';
+import vscode from 'vscode';
 
-const { isSupportingLuaGLM, parse, shiftNonGLMIndex } = require('./luaparse.js');
-const { findAllFunctions, findNative } = require('./search.js');
-const { getFileContext } = require('./natives.js');
+import { isSupportingLuaGLM, parse } from './luaparse.js';
+import { findAllFunctions, findNative } from './search.js';
+import { getFileContext } from './natives.js';
+import knowledge from './knowledge.js';
 
 const ignoredNatives = [];
-
-let knowledge = require('./knowledge.js');
 
 function matchesSimplifiedType(type, expected, raw) {
 	expected = expected.toLowerCase();
@@ -77,7 +76,7 @@ function _severity(check) {
 	return vscode.DiagnosticSeverity.Error;
 }
 
-function refreshDiagnosticsNow(doc, nativeDiagnostics) {
+export function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 	if (!doc) {
 		return;
 	}
@@ -281,7 +280,7 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 		});
 	} catch (e) {
 		if ('index' in e) {
-			const position = doc.positionAt(shiftNonGLMIndex(text, e.index)),
+			const position = doc.positionAt(e.index),
 				end = doc.lineAt(position.line).range.end;
 
 			const range = new vscode.Range(position.line, position.character, end.line, end.character);
@@ -307,7 +306,7 @@ function refreshDiagnosticsNow(doc, nativeDiagnostics) {
 	return diagnostics.length;
 }
 
-function subscribeToDocumentChanges(context, nativeDiagnostics) {
+export function subscribeToDocumentChanges(context, nativeDiagnostics) {
 	const activeEditor = vscode.window.activeTextEditor;
 
 	if (activeEditor && activeEditor.document.languageId === 'lua') {
@@ -371,7 +370,7 @@ function getQuickFixFromDiagnostic(document, diagnostic, returnEditOnly) {
 	return false;
 }
 
-function registerQuickFixHelper(context) {
+export function registerQuickFixHelper(context) {
 	context.subscriptions.push(
 		vscode.languages.registerCodeActionsProvider('lua', {
 			provideCodeActions(document, range, context) {
@@ -397,9 +396,7 @@ function registerQuickFixHelper(context) {
 	);
 }
 
-function addNativeAliases(aliases, hashes) {
-	knowledge = knowledge.filter(e => !e.dynamic);
-
+export function addNativeAliases(aliases, hashes) {
 	let index = 1;
 
 	for (const alias in aliases) {
@@ -439,20 +436,20 @@ function addNativeAliases(aliases, hashes) {
 	}
 }
 
-function lintFolder(folder, nativeDiagnostics) {
+export function lintFolder(folder, nativeDiagnostics) {
 	const workspaceFolder = vscode.workspace.getWorkspaceFolder(folder);
 
 	if (!workspaceFolder) return;
 
 	const workspaceFolderPath = workspaceFolder.uri.path;
 
-	const searchFolder = path.relative(workspaceFolderPath, folder.path).replace(/\[|\]/g, '[$&]');
+	const searchFolder = relative(workspaceFolderPath, folder.path).replace(/\[|\]/g, '[$&]');
 
 	const searchPath = (searchFolder ? searchFolder + '/' : '') + '**/*.lua';
 
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,
-		title: 'Linting ' + path.basename(folder.path),
+		title: 'Linting ' + basename(folder.path),
 		cancellable: true
 	}, async (progress, token) => {
 		let canceled = false;
@@ -482,7 +479,7 @@ function lintFolder(folder, nativeDiagnostics) {
 
 			progress.report({
 				increment: 100 / files.length,
-				message: percentage + '% - ' + path.basename(doc.fileName) + '...'
+				message: percentage + '% - ' + basename(doc.fileName) + '...'
 			});
 
 			issueCount += refreshDiagnosticsNow(doc, nativeDiagnostics);
@@ -498,7 +495,7 @@ function lintFolder(folder, nativeDiagnostics) {
 	});
 }
 
-async function ignoreNativeDiagnostics(nativeDiagnostics) {
+export async function ignoreNativeDiagnostics(nativeDiagnostics) {
 	const editor = vscode.window.activeTextEditor,
 		document = editor ? editor.document : null;
 
@@ -533,7 +530,7 @@ async function ignoreNativeDiagnostics(nativeDiagnostics) {
 	refreshDiagnosticsWithTimeout(document, nativeDiagnostics);
 }
 
-async function fixAllDiagnostics(nativeDiagnostics) {
+export async function fixAllDiagnostics(nativeDiagnostics) {
 	const documents = [];
 
 	nativeDiagnostics.forEach((uri, entries) => {
@@ -583,14 +580,4 @@ async function fixAllDiagnostics(nativeDiagnostics) {
 			}
 		});
 	}
-}
-
-module.exports = {
-	refreshDiagnosticsNow,
-	subscribeToDocumentChanges,
-	registerQuickFixHelper,
-	addNativeAliases,
-	lintFolder,
-	fixAllDiagnostics,
-	ignoreNativeDiagnostics
 }

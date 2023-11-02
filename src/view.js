@@ -1,9 +1,9 @@
-const vscode = require('vscode'),
-    fs = require('fs'),
-    path = require('path'),
-    marked = require('marked');
+import vscode from 'vscode';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { parse as marked } from 'marked';
 
-const { createNativeDocumentation } = require('./natives.js');
+import { createNativeDocumentation } from './natives.js';
 
 let provider = null,
     natives = [];
@@ -56,8 +56,8 @@ class Provider {
     resolveWebviewView(webviewView) {
         this.webview = webviewView.webview;
 
-        const html = fs.readFileSync(path.join(__dirname, 'view', 'view.html'), 'utf8'),
-            template = fs.readFileSync(path.join(__dirname, 'view', 'native.html'), 'utf8');
+        const html = readFileSync(join(__dirname, 'view', 'view.html'), 'utf8'),
+            template = readFileSync(join(__dirname, 'view', 'native.html'), 'utf8');
 
         this.webview.title = 'FiveM Natives';
         this.webview.html = html;
@@ -98,7 +98,7 @@ class Provider {
 
                     const markdown = createNativeDocumentation(native, true).join('\n\n');
 
-                    this.viewer.webview.html = template.replace('{html}', marked.parse(markdown));
+                    this.viewer.webview.html = template.replace('{html}', marked(markdown));
                 }
             }
         });
@@ -115,7 +115,7 @@ class Provider {
     }
 }
 
-function setNatives(newNatives) {
+export function setNatives(newNatives) {
     natives = newNatives.map((native, index) => {
         native.id = 'n' + index;
 
@@ -134,15 +134,10 @@ function setNatives(newNatives) {
     }
 }
 
-function registerWebViewProvider(context) {
+export function registerWebViewProvider(context) {
     provider = new Provider();
 
     const providerDisposable = vscode.window.registerWebviewViewProvider('vs-fivem.search', provider);
 
     context.subscriptions.push(providerDisposable);
-}
-
-module.exports = {
-    setNatives,
-    registerWebViewProvider
 }

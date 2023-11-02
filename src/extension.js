@@ -1,14 +1,14 @@
-const vscode = require('vscode');
-const fetch = require('node-fetch');
+import vscode from 'vscode';
+import fetch from 'node-fetch';
 
-const { isSupportingLuaGLM } = require('./luaparse.js');
-const { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } = require('./natives.js');
-const { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder, refreshDiagnosticsNow, fixAllDiagnostics, ignoreNativeDiagnostics } = require('./diagnostics.js');
-const { updateStatisticsStatus } = require('./statistics.js');
-const { setSearchableNatives, searchNatives, findNative } = require('./search.js');
-const { setNatives, registerWebViewProvider } = require('./view.js');
-const { registerContextInserts, setContextNatives } = require('./resource.js');
-const { registerDefinitionProvider, buildIndex } = require('./index.js');
+import { isSupportingLuaGLM } from './luaparse.js';
+import { createNativeObject, createNativeDocumentation, formatParameters, formatReturns, getPositionContext } from './natives.js';
+import { subscribeToDocumentChanges, registerQuickFixHelper, addNativeAliases, lintFolder, refreshDiagnosticsNow, fixAllDiagnostics, ignoreNativeDiagnostics } from './diagnostics.js';
+import { updateStatisticsStatus } from './statistics.js';
+import { setSearchableNatives, searchNatives, findNative } from './search.js';
+import { setNatives, registerWebViewProvider } from './view.js';
+import { registerContextInserts, setContextNatives } from './resource.js';
+import { registerDefinitionProvider, buildIndex } from './index.js';
 
 let natives = [],
 	aliases = {},
@@ -62,7 +62,7 @@ async function fetchNatives(url, result) {
 /**
  * @param {vscode.ExtensionContext} context
  */
-function activate(context) {
+export function activate(context) {
 	if (natives.length > 0) return;
 
 	const cache = context.globalState.get('natives');
@@ -244,9 +244,4 @@ function activate(context) {
 }
 
 // This method is called when your extension is deactivated
-function deactivate() { }
-
-module.exports = {
-	activate,
-	deactivate
-}
+export function deactivate() { }

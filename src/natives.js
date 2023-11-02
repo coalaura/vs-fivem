@@ -1,7 +1,7 @@
-const vscode = require('vscode'),
-	path = require('path');
+import vscode from 'vscode';
+import { basename } from 'path';
 
-const { nativeOverrides } = require('./overrides.js');
+import { nativeOverrides } from './overrides.js';
 
 const underscoreParts = [
 	'3d',
@@ -50,7 +50,7 @@ function createNativeLuaName(name) {
 }
 
 // Generates the hover documentation for a native
-function createNativeDocumentation(native, isSearch) {
+export function createNativeDocumentation(native, isSearch) {
 	// Header
 	let lines = [
 		`\`${native.ns}\` \`${native.apiset.toUpperCase()}\` [\`${native.hash}\`](https://docs.fivem.net/natives/?_${native.hash})`
@@ -101,7 +101,7 @@ function createNativeDocumentation(native, isSearch) {
 }
 
 // Cleans up the servers json
-function createNativeObject(data) {
+export function createNativeObject(data) {
 	const apiset = data.apiset || 'client',
 		name = data.name ? createNativeLuaName(data.name) : data.hash;
 
@@ -168,8 +168,8 @@ function createNativeObject(data) {
 }
 
 // Gets the context of the current position (client or server)
-function getFileContext(filename) {
-	filename = path.basename(filename);
+export function getFileContext(filename) {
+	filename = basename(filename);
 
 	if (filename.match(/_sv|sv_|(?<!ob)server/gi)) {
 		return 'server';
@@ -183,7 +183,7 @@ function getFileContext(filename) {
 }
 
 // Formats the parameters
-function formatParameters(params, plain, indent, join) {
+export function formatParameters(params, plain, indent, join) {
 	indent = indent || '';
 
 	const config = vscode.workspace.getConfiguration('vs-fivem');
@@ -200,7 +200,7 @@ function formatParameters(params, plain, indent, join) {
 }
 
 // Formats the return values
-function formatReturns(returns, plain) {
+export function formatReturns(returns, plain) {
 	if (returns.length === 0) {
 		return '';
 	}
@@ -210,7 +210,7 @@ function formatReturns(returns, plain) {
 	}).join(', ') + ' = ';
 }
 
-function getPositionContext(document, position) {
+export function getPositionContext(document, position) {
 	let previousLine = position.line > 0 ? document.lineAt(position.line - 1).text : '',
 		line = document.lineAt(position.line).text;
 
@@ -251,13 +251,4 @@ function getPositionContext(document, position) {
 		name: functionName,
 		ctx: context
 	};
-}
-
-module.exports = {
-	createNativeObject,
-	formatParameters,
-	formatReturns,
-	getPositionContext,
-	createNativeDocumentation,
-	getFileContext
 }

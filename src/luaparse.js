@@ -1,61 +1,20 @@
-const parser = require('luaparse');
-const vscode = require('vscode');
+import vscode from 'vscode';
 
-function isSupportingLuaGLM() {
+import { parse as parseGLM } from '@coalaura/luaparse-glm';
+import { parse as parseVanilla } from 'luaparse';
+
+export function isSupportingLuaGLM() {
     const config = vscode.workspace.getConfiguration('vs-fivem');
 
     return config.get('luaGLM');
 }
 
-// Wrapper around luaparse that makes the code lua-glm compatible
-function prepareCode(pCode) {
-    if (!isSupportingLuaGLM()) return pCode;
-
-    // +=, -=, *=, /=, <<=, >>=, &=, |=, and ^=
-    pCode = pCode.replace(/([\w.]+) ([+\-*/&|^]|<<|>>)=/gi, '$1 = $1 $2');
-
-    // Safe Navigation: t?.x?.y == nil
-    pCode = pCode.replace(/(?<=[\w\]])\?(?=\.\w|\[)/gi, '');
-
-    // Unpacking named values from tables using in: local a,b,c in t
-    pCode = pCode.replace(/(?<=,\s*[\w.]+) in (.+?)\s*(?=$|;)/gmi, (match, unpack, index) => {
-        // Check if before match is a for loop
-        if (unpack.includes('do')) {
-            const before = pCode.substring(0, index);
-
-            if (before.match(/for\s+[\w.]+(\s*,\s*[\w.]+)*$/m)) return match;
-        }
-
-        // Check if unpack is a string
-        const last = unpack.slice(-1);
-        if (last === '"' || last === '\'' || last === ',') return match;
-
-        return ` = table.unpack(${unpack})`;
-    });
-
-    return pCode;
-}
-
-function parse(pCode, pOptions = {}) {
-    pCode = prepareCode(pCode);
-
+export function parse(pCode, pOptions = {}) {
     pOptions.luaVersion = '5.3';
 
-    return parser.parse(pCode, pOptions);
+    if (isSupportingLuaGLM()) {
+        return parseGLM(pCode, pOptions);
+    } else {
+        return parseVanilla(pCode, pOptions);
+    }
 }
-
-function shiftNonGLMIndex(pCode, pIndex) {
-    if (!isSupportingLuaGLM()) return pIndex;
-
-    const before = pCode.substring(0, pIndex + 1),
-        fixed = prepareCode(before);
-
-    return pIndex + (before.length - fixed.length);
-}
-
-module.exports = {
-    parse,
-    prepareCode,
-    shiftNonGLMIndex,
-    isSupportingLuaGLM
-};

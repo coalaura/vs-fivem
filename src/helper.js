@@ -1,6 +1,6 @@
-const { parse } = require('./luaparse.js');
+import { parse } from './luaparse.js';
 
-function parseList(code) {
+export function parseList(code) {
     code = 'local list = {' + code + '}';
 
     let ast = false;
@@ -43,7 +43,7 @@ function parseList(code) {
     return result.sort((a, b) => a.value.localeCompare(b.value));
 }
 
-function formatList(items, eol) {
+export function formatList(items, eol) {
     let result = [];
     let line = '';
 
@@ -69,8 +69,3 @@ function formatList(items, eol) {
 
     return result.join(eol).slice(0, -1);
 }
-
-module.exports = {
-    parseList,
-    formatList
-};

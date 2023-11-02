@@ -37,7 +37,7 @@
 		"workspaceContains:**/*.lua",
 		"onLanguage:lua"
 	],
-	"main": "./src/extension.js",
+	"main": "./dist/extension.js",
 	"contributes": {
 		"configuration": {
 			"title": "VS-FiveM",
@@ -159,8 +159,9 @@
 	},
 	"scripts": {
 		"lint": "eslint .",
-		"pretest": "npm run lint",
-		"build": "vsce package"
+		"build": "npm run esbuild && vsce package",
+		"esbuild": "node esbuild.config.js --minify",
+		"watch": "node esbuild.config.js --watch"
 	},
 	"devDependencies": {
 		"@types/glob": "^8.1.0",
@@ -168,6 +169,8 @@
 		"@types/node": "16.x",
 		"@types/vscode": "^1.77.0",
 		"@vscode/test-electron": "^2.3.0",
+		"esbuild": "^0.19.5",
+		"esbuild-copy-static-files": "^0.1.0",
 		"eslint": "^8.36.0",
 		"glob": "^8.1.0",
 		"mocha": "^10.2.0",
@@ -175,6 +178,7 @@
 	},
 	"dependencies": {
 		"@appguru/luafmt": "^1.5.0",
+		"@coalaura/luaparse-glm": "^1.0.4",
 		"luaparse": "^0.3.1",
 		"marked": "^4.3.0",
 		"node-fetch": "^2.6.6"

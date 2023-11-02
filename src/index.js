@@ -1,8 +1,8 @@
-const vscode = require('vscode');
-const path = require('path');
-const fs = require('fs');
+import vscode from 'vscode';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
-const { getFileContext } = require('./natives.js');
+import { getFileContext } from './natives.js';
 
 const index = {};
 
@@ -54,7 +54,7 @@ function rebuildDocumentIndex(document) {
     };
 }
 
-function buildIndex() {
+export function buildIndex() {
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Window,
         cancellable: false,
@@ -124,7 +124,7 @@ function resolveDocumentDefinition(document, position) {
     return null;
 }
 
-function registerDefinitionProvider(context) {
+export function registerDefinitionProvider(context) {
     context.subscriptions.push(
         vscode.languages.registerDefinitionProvider('lua', {
             provideDefinition(document, position) {
@@ -170,18 +170,13 @@ function _findResourceName(document) {
     while (base.length > 1) {
         base.pop();
 
-        const manifest = path.join(base.join('/'), 'fxmanifest.lua'),
-            legacy = path.join(base.join('/'), '__resource.lua');
+        const manifest = join(base.join('/'), 'fxmanifest.lua'),
+            legacy = join(base.join('/'), '__resource.lua');
 
-        if (fs.existsSync(manifest) || fs.existsSync(legacy)) {
+        if (existsSync(manifest) || existsSync(legacy)) {
             return base.pop();
         }
     }
 
     return null;
 }
-
-module.exports = {
-    buildIndex,
-    registerDefinitionProvider
-};

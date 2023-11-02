@@ -1,4 +1,4 @@
-module.exports = [
+export default [
 	// Bad natives
 	{
 		'func': 'GetPlayerPed',
