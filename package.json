@@ -159,8 +159,8 @@
 	},
 	"scripts": {
 		"lint": "eslint .",
-		"build": "npm run esbuild && vsce package",
-		"esbuild": "node esbuild.config.js",
+		"package": "npm run build && vsce package",
+		"build": "node esbuild.config.js",
 		"watch": "node esbuild.config.js --watch"
 	},
 	"devDependencies": {
