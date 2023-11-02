@@ -1,9 +1,9 @@
-.vscode/**
-.vscode-test/**
-test/**
+.github
+.vscode
+node_modules
+src
+esbuild.config.js
+jsconfig.json
 .gitignore
-.yarnrc
-vsc-extension-quickstart.md
-**/jsconfig.json
-**/*.map
-**/.eslintrc.json
+*.vsix
+*.map

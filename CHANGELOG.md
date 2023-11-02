@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.4.1]
+- Optimized build process to reduce extension size
+
 ## [1.4.0]
 - Converted code to ES modules
 - New library for glm code parsing
