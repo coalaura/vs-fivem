@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.2]
+- Further optimizations to build process
+- Fixed a few issues with the hover provider
+- Added JOAAT hash hover previews
+
 ## [1.4.1]
 - Optimized build process to reduce extension size
 

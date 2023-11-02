@@ -2,7 +2,7 @@
 	"name": "vs-fivem",
 	"displayName": "VS FiveM IntelliSense",
 	"description": "Adds highly detailed, in-depth, up-to-date fivem native support for lua to vs-code.",
-	"version": "1.4.1",
+	"version": "1.4.2",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
