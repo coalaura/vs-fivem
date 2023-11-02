@@ -1,33 +1,12 @@
 import vscode from 'vscode';
 
-import { createNativeDocumentation, getPositionContext } from './natives.js';
-import { isSupportingLuaGLM } from './luaparse.js';
-import { findNative } from './search.js';
-
-function joaat(input) {
-    // GetHashKey always lowercases the string
-    input = input.toLowerCase();
-
-    let hash = 0;
-
-    for (let i = 0; i < input.length; i++) {
-        const charCode = input.charCodeAt(i);
-
-        hash += charCode;
-        hash += (hash << 10);
-        hash ^= (hash >>> 6);
-    }
-
-    hash += (hash << 3);
-    hash ^= (hash >>> 11);
-    hash += (hash << 15);
-
-    // Convert the result to a signed 32-bit integer
-    return hash | 0;
-}
+import nativeIndex from './singletons/native-index.js';
+import { joaat } from './helper/joaat.js';
+import { getFileContext } from './helper/natives.js';
+import { isSupportingLuaGLM } from './helper/luaparse.js';
 
 export function registerHoverProvider(context) {
-    const hoverDisposable = vscode.languages.registerHoverProvider('lua', {
+    vscode.languages.registerHoverProvider('lua', {
         provideHover(document, position) {
             // Vector swizzle support
             if (isSupportingLuaGLM()) {
@@ -64,17 +43,17 @@ export function registerHoverProvider(context) {
             }
 
             // Native documentations
-            const ctx = getPositionContext(document, position);
+            const wordRange = document.getWordRangeAtPosition(position, /[\w]+/),
+                word = wordRange ? document.getText(wordRange) : false;
 
-            if (!ctx.name) return;
+            if (!word) return;
 
-            const native = findNative(ctx.name, ctx.ctx);
+            const ctx = getFileContext(document.fileName),
+                native = nativeIndex.get(word, ctx);
 
             if (!native) return;
 
-            return new vscode.Hover(createNativeDocumentation(native));
+            return new vscode.Hover(native.documentation());
         }
-    });
-
-    context.subscriptions.push(hoverDisposable);
+    }, null, context.subscriptions);
 }

@@ -3,12 +3,9 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parse as marked } from 'marked';
 
-import { createNativeDocumentation } from './natives.js';
+import nativeIndex from '../singletons/native-index.js';
 
-let provider = null,
-    natives = [];
-
-class Provider {
+export default class ViewProvider {
     constructor() {
         this.search = '';
         this.actualSearch = '';
@@ -24,32 +21,23 @@ class Provider {
     sendSearchData() {
         if (!this.webview) return;
 
-        let results = [];
+        const results = (this.search ? nativeIndex.searchAll(this.search) : nativeIndex.natives).map(native => {
+            return {
+                name: native.name,
+                detail: native.detail(),
+                ns: native.namespace
+            };
+        });
 
-        if (this.search) {
-            results = natives.filter(native => {
-                const name = native.name.toLowerCase();
-
-                return name.includes(this.search);
-            }).map(native => {
-                return {
-                    id: native.id,
-                    name: native.name,
-                    detail: native.detail,
-                    ns: native.ns
-                };
-            });
-
-            results.sort((a, b) => {
-                return a.ns.localeCompare(b.ns);
-            });
-        }
+        results.sort((a, b) => {
+            return a.ns.localeCompare(b.ns);
+        });
 
         this.webview.postMessage({
             type: 'search',
             search: this.actualSearch,
             results: results,
-            total: natives.length
+            total: nativeIndex.size()
         });
     }
 
@@ -81,7 +69,7 @@ class Provider {
                     this.sendSearchData();
                 }
             } else if (type === 'select') {
-                const native = natives.find(native => native.id === value);
+                const native = nativeIndex.search(value);
 
                 if (native) {
                     if (!this.viewer) {
@@ -96,7 +84,7 @@ class Provider {
 
                     this.viewer.title = native.name;
 
-                    const markdown = createNativeDocumentation(native, true).join('\n\n');
+                    const markdown = native.documentation().join('\n\n');
 
                     this.viewer.webview.html = template.replace('{html}', marked(markdown));
                 }
@@ -109,35 +97,8 @@ class Provider {
             }
         });
 
-        if (natives.length > 0) {
+        if (nativeIndex.size() > 0) {
             this.sendSearchData();
         }
     }
-}
-
-export function setNatives(newNatives) {
-    natives = newNatives.map((native, index) => {
-        native.id = 'n' + index;
-
-        return native;
-    });
-
-    natives.sort((a, b) => {
-        const aName = a.name.startsWith('0x') ? a.name : '~' + a.name,
-            bName = b.name.startsWith('0x') ? b.name : '~' + b.name;
-
-        return aName.localeCompare(bName);
-    });
-
-    if (provider) {
-        provider.refresh();
-    }
-}
-
-export function registerWebViewProvider(context) {
-    provider = new Provider();
-
-    const providerDisposable = vscode.window.registerWebviewViewProvider('vs-fivem.search', provider);
-
-    context.subscriptions.push(providerDisposable);
 }

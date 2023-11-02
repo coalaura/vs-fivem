@@ -1,68 +1,58 @@
 import { relative, basename } from 'path';
 import vscode from 'vscode';
 
-import { isSupportingLuaGLM, parse } from './luaparse.js';
-import { findAllFunctions, findNative } from './search.js';
-import { getFileContext } from './natives.js';
-import knowledge from './knowledge.js';
+import nativeIndex from './singletons/native-index.js';
+import { on } from './singletons/event-bus.js';
+import { matchAll, extractAllFunctionCalls } from './helper/regexp.js';
+import { getFileContext } from './helper/natives.js';
+import { onAnyDocumentChange } from './helper/listeners.js';
+import { isSupportingLuaGLM, parse } from './helper/luaparse.js';
 
-const ignoredNatives = [];
+import DiagnosticIndex from './classes/diagnostic-index.js';
+import Diagnostic from './classes/diagnostic.js';
+import Knowledge from './data/knowledge.js';
 
-function matchesSimplifiedType(type, expected, raw) {
+const index = new DiagnosticIndex();
+
+const diagnosticsTimeouts = {};
+
+function matchesBasicType(actual, expected) {
+	if (!actual) return true;
+
 	expected = expected.toLowerCase();
 
+	if (expected.startsWith('any')) return true;
+
+	// Make sure we have basic types only
 	if (['hash', 'ped', 'object', 'player', 'entity', 'vehicle', 'blip', 'cam', 'pickup', 'long'].includes(expected)) {
 		expected = 'integer';
-	} else if (expected.startsWith('any')) {
-		return true;
 	}
 
+	return actual === expected;
+}
+
+function resolveArgumentType(argument) {
+	if (argument === 'true' || argument === 'false') {
+		return 'boolean';
+	} else if (argument === 'nil') {
+		return 'nil';
+	}
+
+	if ((argument.startsWith('"') && argument.endsWith('"')) || (argument.startsWith("'") && argument.endsWith("'"))) {
+		return 'string';
+	}
+
+	if (argument.match(/^\d+$/)) {
+		return 'integer';
+	} else if (argument.match(/^\d+\.\d+$/)) {
+		return 'number';
+	}
+
+	return false;
+}
+
+function resolveSeverity(type) {
 	switch (type) {
-		case 'BooleanLiteral':
-			return expected === 'boolean';
-		case 'NumericLiteral':
-			if (expected === 'integer') {
-				return !raw.includes('.');
-			} else if (expected === 'number') {
-				return raw.includes('.');
-			}
-
-			return false;
-		case 'StringLiteral':
-			return expected === 'string';
-		case 'NilLiteral':
-			return expected === 'nil';
-	}
-
-	return true;
-}
-
-let diagnosticsTimeouts = {};
-
-function refreshDiagnosticsWithTimeout(doc, nativeDiagnostics) {
-	if (!doc) {
-		return;
-	}
-
-	const name = doc.fileName;
-
-	clearTimeout(diagnosticsTimeouts[name]);
-
-	diagnosticsTimeouts[name] = setTimeout(() => {
-		refreshDiagnosticsNow(doc, nativeDiagnostics);
-	}, 500);
-}
-
-function _replacement(check, replacement) {
-	if (!replacement) {
-		return check.message;
-	}
-
-	return check.message + '\n\nFix: ' + replacement;
-}
-
-function _severity(check) {
-	switch (check.type) {
 		case 'error':
 			return vscode.DiagnosticSeverity.Error;
 		case 'warning':
@@ -76,367 +66,179 @@ function _severity(check) {
 	return vscode.DiagnosticSeverity.Error;
 }
 
-export function refreshDiagnosticsNow(doc, nativeDiagnostics) {
-	if (!doc) {
-		return;
-	}
+export function refreshDiagnosticsNow(doc) {
+	if (!doc) return;
 
-	const uri = doc.uri;
+	index.clear(doc);
 
-	nativeDiagnostics.delete(uri);
-
-	if (doc.languageId !== 'lua') {
-		return;
-	}
-
-	const started = Date.now();
-
-	const text = doc.getText();
-
-	const functions = findAllFunctions(text);
+	// Not Lua? Not interested.
+	if (doc.languageId !== 'lua') return;
 
 	const diagnostics = [];
 
-	const supportLuaGLM = isSupportingLuaGLM();
+	const text = doc.getText(),
+		calls = extractAllFunctionCalls(text);
 
-	knowledge.filter(check => {
-		return supportLuaGLM || !check.lua_glm;
-	}).forEach(check => {
-		const regex = check.regex,
-			name = check.func,
-			args = check.args;
+	// General knowledge
+	for (const check of Knowledge) {
+		if (check.lua_glm && !isSupportingLuaGLM()) continue;
 
+		const regex = check.regex;
+
+		// Regex search
 		if (regex) {
-			const matches = text.matchAll(regex);
+			const matches = matchAll(regex, text);
 
-			Array.from(matches).forEach(match => {
-				const position = doc.positionAt(match.index);
+			for (const match of matches) {
+				const start = doc.positionAt(match.index),
+					end = doc.positionAt(match.index + match[0].length),
+					range = new vscode.Range(start, end);
 
-				const range = new vscode.Range(position.line, position.character, position.line, position.character + match[0].length);
+				const replacement = text.substring(match.index, match.index + match[0].length).replace(regex, check.replace),
+					severity = resolveSeverity(check.type);
 
-				const replacement = text.substring(match.index, match.index + match[0].length).replace(regex, check.replace);
+				diagnostics.push(new Diagnostic(range, check.message, severity, replacement));
+			}
 
-				const diagnostic = new vscode.Diagnostic(range, _replacement(check, replacement), _severity(check));
-
-				diagnostic.code = check.id;
-
-				diagnostics.push(diagnostic);
-			});
-		} else {
-			const found = functions.filter(func => {
-				return func.name === name && (!args || func.params.match(args));
-			});
-
-			found.forEach(func => {
-				const position = doc.positionAt(func.index),
-					offset = (args ? func.match : func.name).length;
-
-				const range = new vscode.Range(position.line, position.character, position.line, position.character + offset);
-
-				const replacement = check.replace ? check.replace.replace(/\$0/g, func.params.match(args).shift() || '') : false;
-
-				const diagnostic = new vscode.Diagnostic(range, _replacement(check, replacement), _severity(check));
-
-				diagnostic.code = check.id;
-
-				diagnostics.push(diagnostic);
-			});
+			continue;
 		}
-	});
 
+		// Function search
+		const name = check.func,
+			argumentRegex = check.argumentRegex;
+
+		const matchingCalls = calls.filter(call => {
+			return call.name === name && (!argumentRegex || call.rawArguments.match(argumentRegex));
+		});
+
+		for (const call of matchingCalls) {
+			const replacement = check.replace ? check.replace.replace(/\$0/g, call.rawArguments) : false,
+				severity = resolveSeverity(check.type);
+
+			diagnostics.push(new Diagnostic(call.range(doc), check.message, severity, replacement));
+		}
+	}
+
+	// Native aliases & hashes
+	for (const call of calls) {
+		const hash = nativeIndex.getNameFromHash(call.name);
+
+		if (hash) {
+			const replacement = hash + '(' + call.rawArguments + ')';
+
+			diagnostics.push(new Diagnostic(call.range(doc), `\`${call.name}\` is named, use \`${hash}\` instead.`, vscode.DiagnosticSeverity.Warning, replacement));
+
+			continue;
+		}
+
+		const alias = nativeIndex.getNameFromAlias(call.name);
+
+		if (alias) {
+			const replacement = alias + '(' + call.rawArguments + ')';
+
+			diagnostics.push(new Diagnostic(call.range(doc), `\`${call.name}\` is deprecated, use \`${alias}\` instead.`, vscode.DiagnosticSeverity.Warning, replacement));
+		}
+	}
+
+	// Native checks
 	const context = getFileContext(doc.fileName);
 
-	functions.forEach(func => {
-		const native = findNative(func.name, context);
+	for (const call of calls) {
+		const native = nativeIndex.get(call.name, context);
 
-		if (!native || ignoredNatives.includes(native.name)) return;
+		if (!native) continue;
 
-		if (text.includes(`function ${native.name}`)) return;
+		const callArguments = call.arguments;
 
-		const start = doc.positionAt(func.index),
-			previousLine = start.line > 1 ? doc.lineAt(start.line - 1).text : false;
+		// Wrong number of arguments
+		if (callArguments.length !== native.params.length) {
+			diagnostics.push(new Diagnostic(call.range(doc), `${native.name} expects ${native.params.length} arguments instead of ${callArguments.length}.`, vscode.DiagnosticSeverity.Warning));
 
-		if (previousLine && previousLine.includes('-- IGNORE')) return;
-
-		let index = func.index + func.name.length + 1,
-			code = text.substring(func.index, index),
-			openingBrackets = 1;
-
-		// Get the whole function call (including arguments and nested calls)
-		while (openingBrackets > 0 && index < text.length) {
-			const char = text.charAt(index);
-
-			if (char === '(') {
-				openingBrackets++;
-			} else if (char === ')') {
-				openingBrackets--;
-			}
-
-			code += char;
-
-			index++;
+			continue;
 		}
 
-		if (openingBrackets > 0) return;
+		// Wrong argument types
+		for (const [index, argument] of callArguments.entries()) {
+			const param = native.params[index],
+				argType = resolveArgumentType(argument.value);
 
-		try {
-			const ast = parse(code, {
-				comments: false
-			});
-
-			if (ast.body.length === 0 || ast.body[0].type !== 'CallStatement') {
-				return;
+			if (!matchesBasicType(argType, param.type)) {
+				diagnostics.push(new Diagnostic(argument.range(doc), `${native.name} expects ${param.type} for parameter ${index + 1}.`, vscode.DiagnosticSeverity.Warning));
 			}
-
-			const args = ast.body[0].expression.arguments;
-
-			if (args.length !== native.params.length) {
-				const end = doc.positionAt(index - 1);
-
-				const range = new vscode.Range(start.line, start.column, end.line, end.column);
-
-				const diagnostic = new vscode.Diagnostic(range, `${native.name} expects ${native.params.length} parameters instead of ${args.length}.`, vscode.DiagnosticSeverity.Warning);
-
-				diagnostic.code = 'param-count';
-
-				diagnostics.push(diagnostic);
-			} else {
-				for (let x = 0; x < args.length; x++) {
-					let arg = args[x],
-						param = native.params[x];
-
-					if (arg.type === 'UnaryExpression') {
-						const operator = arg.operator;
-
-						arg = arg.argument;
-
-						arg.raw = operator + arg.raw;
-					}
-
-					if (!matchesSimplifiedType(arg.type, param.type, arg.raw)) {
-						const start = doc.positionAt(func.index + arg.range[0]),
-							end = doc.positionAt(func.index + arg.range[1]);
-
-						const range = new vscode.Range(start.line, start.column, end.line, end.column);
-
-						const diagnostic = new vscode.Diagnostic(range, `${native.name} expects ${param.type} for parameter ${x + 1}.`, vscode.DiagnosticSeverity.Warning);
-
-						diagnostic.code = 'param-type';
-
-						diagnostics.push(diagnostic);
-					}
-				}
-			}
-		} catch (e) { }
-	});
+		}
+	}
 
 	// Trailing whitespace
-	let matches = text.matchAll(/[ \t]+$/gm);
+	{
+		const matches = matchAll(/[ \t]+$/gm);
 
-	Array.from(matches).forEach(match => {
-		const position = doc.positionAt(match.index),
-			end = doc.positionAt(match.index + match[0].length);
+		for (const match of matches) {
+			const start = doc.positionAt(match.index),
+				end = doc.positionAt(match.index + match[0].length);
 
-		const range = new vscode.Range(position.line, position.column, end.line, end.character);
+			const range = new vscode.Range(start, end);
 
-		const diagnostic = new vscode.Diagnostic(range, 'Trailing whitespace', vscode.DiagnosticSeverity.Warning);
-
-		diagnostic.code = 'whitespace';
-
-		diagnostics.push(diagnostic);
-	});
+			diagnostics.push(new Diagnostic(range, 'Trailing whitespace', vscode.DiagnosticSeverity.Warning, ''));
+		}
+	}
 
 	// 3 or more newlines
-	matches = text.matchAll(/(\r?\n){3,}/gm);
+	{
+		const matches = matchAll(/(\r?\n){3,}/gm);
 
-	Array.from(matches).forEach(match => {
-		const start = doc.positionAt(match.index),
-			end = doc.positionAt(match.index + match[0].length);
+		for (const match of matches) {
+			const start = doc.positionAt(match.index),
+				end = doc.positionAt(match.index + match[0].length);
 
-		const range = new vscode.Range(start.line, start.column, end.line, end.column);
+			const range = new vscode.Range(start, end);
 
-		const diagnostic = new vscode.Diagnostic(range, 'Avoid excessive newlines', vscode.DiagnosticSeverity.Information);
+			diagnostics.push(new Diagnostic(range, 'Avoid excessive newlines', vscode.DiagnosticSeverity.Information, '\n\n'));
+		}
+	}
 
-		diagnostic.code = 'newlines';
-
-		diagnostics.push(diagnostic);
-	});
-
+	// No trailing newline
 	if (text !== '' && !text.endsWith('\n')) {
 		const position = doc.positionAt(text.length);
 
-		const range = new vscode.Range(position.line, position.character, position.line, position.character);
+		const range = new vscode.Range(position, position);
 
-		const diagnostic = new vscode.Diagnostic(range, 'File should end with a newline', vscode.DiagnosticSeverity.Information);
-
-		diagnostic.code = 'trail_newline';
-
-		diagnostics.push(diagnostic);
+		diagnostics.push(new Diagnostic(range, 'File should end with a newline', vscode.DiagnosticSeverity.Information, '\n'));
 	}
 
+	// Syntax errors
 	try {
-		parse(text, {
-			comments: false
-		});
+		parse(text);
 	} catch (e) {
 		if ('index' in e) {
-			const position = doc.positionAt(e.index),
-				end = doc.lineAt(position.line).range.end;
+			const start = doc.positionAt(e.index),
+				end = doc.lineAt(start.line).range.end;
 
-			const range = new vscode.Range(position.line, position.character, end.line, end.character);
+			const range = new vscode.Range(start, end);
 
-			const message = e.message.replace(/^\[\d+:\d+\] /, '');
+			const message = e.message.replace(/^\[\d+:\d+]/, '');
 
-			const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Error);
-
-			diagnostic.code = 'syntax';
-
-			diagnostics.push(diagnostic);
+			diagnostics.push(new Diagnostic(range, message, vscode.DiagnosticSeverity.Error, false));
 		}
 	}
 
-	const elapsed = Date.now() - started;
-
-	if (elapsed > 150) {
-		console.warn(`Diagnostics for ${doc.fileName} took ${elapsed}ms (>150ms)`);
-	}
-
-	nativeDiagnostics.set(uri, diagnostics);
+	index.set(doc, diagnostics);
 
 	return diagnostics.length;
 }
 
-export function subscribeToDocumentChanges(context, nativeDiagnostics) {
-	const activeEditor = vscode.window.activeTextEditor;
+function refreshDiagnosticsWithTimeout(doc) {
+	if (!doc) return;
 
-	if (activeEditor && activeEditor.document.languageId === 'lua') {
-		refreshDiagnosticsWithTimeout(activeEditor.document, nativeDiagnostics);
-	}
+	const name = doc.fileName;
 
-	context.subscriptions.push(
-		vscode.window.onDidChangeActiveTextEditor(editor => {
-			if (editor) {
-				refreshDiagnosticsWithTimeout(editor.document, nativeDiagnostics);
-			}
-		})
-	);
+	clearTimeout(diagnosticsTimeouts[name]);
 
-	context.subscriptions.push(
-		vscode.workspace.onDidChangeTextDocument(e => {
-			refreshDiagnosticsWithTimeout(e.document, nativeDiagnostics);
-		})
-	);
+	diagnosticsTimeouts[name] = setTimeout(() => {
+		refreshDiagnosticsNow(doc);
+	}, 500);
 }
 
-function getQuickFixFromDiagnostic(document, diagnostic, returnEditOnly) {
-	const id = diagnostic.code,
-		dMessage = diagnostic.message;
-
-	let message = '',
-		replace = '';
-
-	if (id === 'whitespace') {
-		message = 'Remove trailing whitespace';
-		replace = '';
-	} else if (id === 'newlines') {
-		message = 'Reduce newlines';
-		replace = '\n\n';
-	} else if (id === 'trail_newline') {
-		message = 'Add trailing newline';
-		replace = '\n';
-	} else if (dMessage.includes('\n\nFix: ')) {
-		const replacement = dMessage.split('\n\nFix: ').pop();
-
-		message = `Replace with ${replacement}`;
-		replace = replacement;
-	}
-
-	if (message) {
-		const edit = new vscode.WorkspaceEdit();
-
-		edit.replace(document.uri, diagnostic.range, replace);
-
-		if (returnEditOnly) {
-			return edit;
-		}
-
-		const action = new vscode.CodeAction(message, vscode.CodeActionKind.QuickFix);
-
-		action.edit = edit;
-
-		return action;
-	}
-
-	return false;
-}
-
-export function registerQuickFixHelper(context) {
-	context.subscriptions.push(
-		vscode.languages.registerCodeActionsProvider('lua', {
-			provideCodeActions(document, range, context) {
-				const diagnostics = context.diagnostics;
-
-				if (diagnostics.length === 0) {
-					return;
-				}
-
-				const actions = [];
-
-				for (const diagnostic of diagnostics) {
-					const action = getQuickFixFromDiagnostic(document, diagnostic, false);
-
-					if (action) {
-						actions.push(action);
-					}
-				}
-
-				return actions;
-			}
-		})
-	);
-}
-
-export function addNativeAliases(aliases, hashes) {
-	let index = 1;
-
-	for (const alias in aliases) {
-		const replacement = aliases[alias];
-
-		if (replacement === alias) continue;
-
-		knowledge.push({
-			dynamic: true,
-
-			id: `a${index}`,
-			type: 'warning',
-			func: alias,
-			message: `${alias} is deprecated, use ${replacement} instead`,
-			replace: replacement
-		});
-
-		index++;
-	}
-
-	index = 1;
-
-	for (const hash in hashes) {
-		const replacement = hashes[hash];
-
-		knowledge.push({
-			dynamic: true,
-
-			id: `h${index}`,
-			type: 'warning',
-			func: hash,
-			message: `Use the named native ${replacement} instead of its hash ${hash}`,
-			replace: replacement
-		});
-
-		index++;
-	}
-}
-
-export function lintFolder(folder, nativeDiagnostics) {
+function lintFolder(folder) {
 	const workspaceFolder = vscode.workspace.getWorkspaceFolder(folder);
 
 	if (!workspaceFolder) return;
@@ -467,10 +269,9 @@ export function lintFolder(folder, nativeDiagnostics) {
 
 		if (canceled) return;
 
-		let index = 0,
-			issueCount = 0;
+		let issues = 0;
 
-		for (const file of files) {
+		for (const [index, file] of files.entries()) {
 			if (canceled) return;
 
 			const percentage = Math.floor((index / files.length) * 100);
@@ -482,102 +283,83 @@ export function lintFolder(folder, nativeDiagnostics) {
 				message: percentage + '% - ' + basename(doc.fileName) + '...'
 			});
 
-			issueCount += refreshDiagnosticsNow(doc, nativeDiagnostics);
-
-			index++;
+			issues += refreshDiagnosticsNow(doc);
 		}
 
-		if (issueCount === 0) {
+		if (issues === 0) {
 			vscode.window.showInformationMessage('No issues found.');
 		} else {
-			vscode.window.showInformationMessage(`Found ${issueCount} issue${issueCount === 1 ? '' : 's'}.`);
+			vscode.window.showInformationMessage(`Found ${issues} issue${issues > 1 ? 's' : ''}.`);
 		}
 	});
 }
 
-export async function ignoreNativeDiagnostics(nativeDiagnostics) {
-	const editor = vscode.window.activeTextEditor,
-		document = editor ? editor.document : null;
+function fixAllDiagnostics() {
+	const uris = index.keys();
 
-	if (!document) return;
+	if (uris.length === 0) return;
 
-	const selection = editor.selection;
+	vscode.window.withProgress({
+		location: vscode.ProgressLocation.Notification,
+		title: 'Fixing diagnostics',
+	}, async (progress) => {
+		for (const [index, uri] of uris.entries()) {
+			const percentage = Math.floor((index / uri.length) * 100);
 
-	const text = document.getText(selection);
+			progress.report({
+				increment: 100 / uri.length,
+				message: percentage + '%'
+			});
 
-	if (!text.trim()) return;
+			const document = await vscode.workspace.openTextDocument(uri);
 
-	const context = getFileContext(document.fileName);
+			while (true) {
+				refreshDiagnosticsNow(document);
 
-	const native = findNative(text, context);
+				const edits = index.get(document)
+					.map(diagnostic => index.resolveCodeAction(document, diagnostic.range))
+					.filter(Boolean)
+					.map(action => action.edit);
 
-	if (!native) {
-		vscode.window.showErrorMessage(`Could not find native ${text}.`);
+				if (edits.length === 0) break;
 
-		return;
-	}
+				await vscode.workspace.applyEdit(edits[0]);
+			}
 
-	if (ignoredNatives.includes(native.name)) {
-		ignoredNatives.splice(ignoredNatives.indexOf(native.name), 1);
-
-		vscode.window.showInformationMessage(`Unignored native ${native.name}.`);
-	} else {
-		ignoredNatives.push(native.name);
-
-		vscode.window.showInformationMessage(`Ignored native ${native.name} (for this session).`);
-	}
-
-	refreshDiagnosticsWithTimeout(document, nativeDiagnostics);
+			await document.save();
+		}
+	});
 }
 
-export async function fixAllDiagnostics(nativeDiagnostics) {
-	const documents = [];
+export function registerDiagnostics(context) {
+	// Diagnostics provider
+	onAnyDocumentChange(context, refreshDiagnosticsWithTimeout);
 
-	nativeDiagnostics.forEach((uri, entries) => {
-		const docPath = uri.path;
+	// Quick fix provider
+	vscode.languages.registerCodeActionsProvider('lua', {
+		provideCodeActions(document, range) {
+			const action = index.resolveCodeAction(document, range);
 
-		entries.forEach(() => {
-			if (!documents.includes(docPath)) {
-				documents.push(docPath);
-			}
-		});
+			return action ? [action] : [];
+		}
+	}, null, context.subscriptions);
+
+	// Commands
+	vscode.commands.registerCommand('vs-fivem.lintFolder', folder => {
+		lintFolder(folder);
+	}, null, context.subscriptions);
+
+	vscode.commands.registerCommand('vs-fivem.fixAll', () => {
+		fixAllDiagnostics();
+	}, null, context.subscriptions);
+
+	// Once natives are loaded
+	on('natives', () => {
+		const editor = vscode.window.activeTextEditor,
+			document = editor ? editor.document : false;
+
+		if (!document) return;
+
+		refreshDiagnosticsNow(document);
 	});
-
-	if (documents.length > 0) {
-		vscode.window.withProgress({
-			location: vscode.ProgressLocation.Notification,
-			title: 'Fixing diagnostics',
-		}, async (progress) => {
-			let index = 0;
-
-			for (const docPath of documents) {
-				const percentage = Math.floor((index / documents.length) * 100);
-
-				progress.report({
-					increment: 100 / documents.length,
-					message: percentage + '%'
-				});
-
-				const uri = vscode.Uri.file(docPath);
-
-				const document = await vscode.workspace.openTextDocument(uri);
-
-				while (true) {
-					refreshDiagnosticsNow(document, nativeDiagnostics);
-
-					const entries = nativeDiagnostics.get(uri);
-
-					const edits = entries.map(e => getQuickFixFromDiagnostic(document, e, true)).filter(e => e);
-
-					if (edits.length === 0) break;
-
-					await vscode.workspace.applyEdit(edits[0]);
-				}
-
-				await document.save();
-
-				index++;
-			}
-		});
-	}
 }

@@ -2,7 +2,7 @@ export default [
 	// Bad natives
 	{
 		'func': 'GetPlayerPed',
-		'args': /^(0|-1)?$/m,
+		'argumentRegex': /^(0|-1)?$/m,
 		'message': 'Use PlayerPedId instead of GetPlayerPed.',
 		'replace': 'PlayerPedId()',
 		'type': 'warning'
@@ -31,14 +31,14 @@ export default [
 	},
 	{
 		'func': 'Citizen.Wait',
-		'args': /^([1-9]|[1-4][0-9])$/m,
+		'argumentRegex': /^([1-9]|[1-4][0-9])$/m,
 		'message': 'You should avoid waiting less than ~50ms and use 0 to wait one tick instead.',
 		'replace': 'Citizen.Wait(0)',
 		'type': 'warning'
 	},
 	{
 		'func': 'Citizen.Wait',
-		'args': /^\d+(?=\.\d+$)/m,
+		'argumentRegex': /^\d+(?=\.\d+$)/m,
 		'message': 'Citizen.Wait expects an integer, what you are doing is literally a sin.',
 		'replace': 'Citizen.Wait($0)',
 		'type': 'warning'
@@ -104,8 +104,4 @@ export default [
 		'type': 'warning',
 		'lua_glm': true
 	}
-].map((entry, index) => {
-	entry.id = `k${index + 1}`;
-
-	return entry;
-});
+];

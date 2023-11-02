@@ -78,8 +78,3 @@ The extension will show a preview of a hash function when hovering over it. With
 ![lint-folder](.github/lint-folder.png)
 
 ![fix-all](.github/fix-all.png)
-
-### Statistics
-Displays statistics related to the current file in the status bar.
-
-![statistics](.github/statistics.png)

@@ -56,7 +56,7 @@
                 }
 
                 html += `
-                    <div class="native" data-id="${native.id}">
+                    <div class="native" data-name="${native.name}">
                         <div class="name">${native.name}</div>
                         <div class="detail">${native.detail}</div>
                     </div>
@@ -72,7 +72,7 @@
             native.addEventListener("click", () => {
                 vscode.postMessage({
                     type: "select",
-                    value: native.dataset.id
+                    value: native.dataset.name
                 });
             });
         });
@@ -82,6 +82,10 @@
 <style>
     * {
         box-sizing: border-box;
+    }
+
+    #results {
+        overflow-x: hidden;
     }
 
     .natives {
@@ -154,6 +158,9 @@
         font-size: 12px;
         font-style: italic;
         padding-left: 2px;
+        max-width: 50%;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .natives .native:hover {

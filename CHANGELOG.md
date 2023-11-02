@@ -1,5 +1,10 @@
 # Change Log
 
+## [2.0.0]
+- Completely rewrote the extension, cleaning up the code a lot
+- Added a color highlighter
+- Various improvements making the extension faster and more stable
+
 ## [1.4.2]
 - Further optimizations to build process
 - Fixed a few issues with the hover provider
