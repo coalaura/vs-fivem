@@ -17,7 +17,7 @@ export function matchAll(regex, str) {
 export function extractAllFunctionCalls(code) {
     const calls = [];
 
-    const matches = matchAll(/([\w.:]+) ?\((.*?)\)(?=$|;)/gm, code);
+    const matches = matchAll(/([\w.:]+) ?\((.*?)\)(?=$|[; ])/gm, code);
 
     for (const match of matches) {
         const callIndex = match.index,

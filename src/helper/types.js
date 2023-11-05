@@ -129,7 +129,7 @@ export function convertValueToBasicType(type, value) {
         case 'number':
             return number.includes('.') ? number : number + '.0';
         case 'boolean':
-            return noString === 'true' ? 'true' : 'false';
+            return noString === 'true' ? 'true' : (number ? 'true' : 'false');
         case 'string':
             return `"${noString}"`;
         case 'vector3':
