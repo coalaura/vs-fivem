@@ -6,8 +6,8 @@ import { matchAll } from '../helper/regexp.js';
 import { getFileContext } from '../helper/natives.js';
 
 // Walk up the directory tree until we find a resource manifest file.
-function resolveResourceName(document) {
-    const base = document.fileName.split(/[\\\/]/);
+function resolveResourceName(fileName) {
+    const base = fileName.split(/[\\\/]/);
 
     while (base.length > 1) {
         base.pop();
@@ -21,6 +21,18 @@ function resolveResourceName(document) {
     }
 
     return null;
+}
+
+function positionAt(text, index) {
+    const upToChar = text.substring(0, index);
+
+    const line = (upToChar.match(/\n/g) || []).length;
+
+    const lastNewlineIndex = upToChar.lastIndexOf('\n');
+
+    const character = index - lastNewlineIndex - 1;
+
+    return { line, character };
 }
 
 export default class DefinitionIndex {
@@ -48,11 +60,9 @@ export default class DefinitionIndex {
         }
     }
 
-    rebuild(document) {
-        const name = document.fileName,
-            resource = resolveResourceName(document),
-            context = getFileContext(name),
-            text = document.getText();
+    rebuild(name, text) {
+        const resource = resolveResourceName(name),
+            context = getFileContext(name);
 
         this.delete(name);
 
@@ -65,7 +75,7 @@ export default class DefinitionIndex {
             const local = definition[1] === 'local',
                 name = definition[2];
 
-            const position = document.positionAt(definition.index);
+            const position = positionAt(text, definition.index);
 
             if (local) {
                 locals[name] = {
@@ -83,12 +93,12 @@ export default class DefinitionIndex {
         }
 
         if (context === 'client' || context === 'server') {
-            const eventRegistrations = matchAll(/RegisterNetEvent\((["'])(.+?)\1\)/g, text);
+            const eventRegistrations = matchAll(/(Register(Net|Client|Server)(Event|Callback))\((["'])(.+?)\4/g, text);
 
             for (const registration of eventRegistrations) {
-                const event = registration[2];
+                const event = registration[5];
 
-                const position = document.positionAt(registration.index);
+                const position = positionAt(text, registration.index + registration[1].length + 1);
 
                 this.events[context][event] = {
                     file: name,
@@ -129,7 +139,7 @@ export default class DefinitionIndex {
                 }
 
                 const name = document.fileName,
-                    resource = resolveResourceName(document),
+                    resource = resolveResourceName(name),
                     context = getFileContext(name);
 
                 // Is the function defined in this file?

@@ -1,7 +1,8 @@
 import vscode from 'vscode';
 
+import { readFileSync } from 'fs';
+
 import DefinitionIndex from './classes/definition-index.js';
-import { isMultiThreadIndexing } from './helper/config.js';
 
 const index = new DefinitionIndex();
 
@@ -33,26 +34,12 @@ export function buildFullIndex() {
             });
         }
 
-        report();
+        for (const file of files) {
+            const text = readFileSync(file.fsPath, 'utf8');
 
-        if (isMultiThreadIndexing()) {
-            // Significantly faster but heavy on the CPU
-            await Promise.all(files.map(async file => {
-                const document = await vscode.workspace.openTextDocument(file);
+            index.rebuild(file.fsPath, text);
 
-                index.rebuild(document);
-
-                report();
-            }));
-        } else {
-            // Slower but lighter on the CPU
-            for (const file of files) {
-                const document = await vscode.workspace.openTextDocument(file);
-
-                index.rebuild(document);
-
-                report();
-            }
+            report();
         }
 
         progress.report({ increment: 100 });

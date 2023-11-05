@@ -46,11 +46,6 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Support and diagnose [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md) syntax like `+=`."
-				},
-				"vs-fivem.multiThreadIndexing": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "Use as many threads (promises in this case) to index your workspace as possible. This will speed up initial indexing but is quite resource hungry."
 				}
 			}
 		},
