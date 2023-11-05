@@ -18,7 +18,7 @@ export default class Native {
         this.parameters = parameters;
         this.returns = returns;
 
-        this.aliases = (json.aliases || []).map(alias => createNativeLuaName(alias));
+        this.aliases = (json.aliases || []).map(alias => createNativeLuaName(alias)).filter(alias => alias !== this.name);
 
         this.example = json.examples ? json.examples.find(example => {
             return example.lang === 'lua';

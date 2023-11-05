@@ -27,10 +27,19 @@ export function extractAllFunctionCalls(code) {
         // Ignore definitions
         if (code.includes(`function ${name}`)) continue;
 
+        const before = code.substring(code.lastIndexOf('\n', callIndex) + 1, callIndex),
+            beforeDQuotes = before.match(/(?<!\\)"/g) || [],
+            beforeSQuotes = before.match(/(?<!\\)'/g) || [];
+
+        // Ignore if inside a string (odd number of not-escaped quotes)
+        if (beforeDQuotes.length % 2 !== 0 || beforeSQuotes.length % 2 !== 0) continue;
+
         const arguments_ = [];
 
         let level = 0,
             start = argIndex,
+            string = false,
+            escape = false,
             argument = '',
             rawArguments = '';
 
@@ -39,22 +48,37 @@ export function extractAllFunctionCalls(code) {
         for (let index = argIndex; index < code.length; index++) {
             const char = code[index];
 
-            if (char === '(') {
-                level++;
-            } else if (char === ')') {
-                level--;
+            if (string) {
+                if (escape) {
+                    escape = false;
+                } else if (char === '\\') {
+                    escape = true;
+                } else if (char === string) {
+                    string = false;
+                }
+            } else {
+                if (char === '"' || char === "'") {
+                    string = char;
+                } else if (char === '(') {
+                    level++;
 
-                // End of argument list
-                if (level < 0) {
-                    end = index + 1;
+                    // Function definitions inside arguments is too much of a hassle to parse/implement
+                    if (rawArguments.endsWith('function')) break;
+                } else if (char === ')') {
+                    level--;
 
-                    break;
+                    // End of argument list
+                    if (level < 0) {
+                        end = index + 1;
+
+                        break;
+                    }
                 }
             }
 
             rawArguments += char;
 
-            if (char === ',' && level === 0) {
+            if (char === ',' && level === 0 && !string) {
                 if (argument[0] === ' ') start++;
 
                 arguments_.push({
@@ -71,6 +95,9 @@ export function extractAllFunctionCalls(code) {
                 argument += char;
             }
         }
+
+        // Function definitions inside arguments is too much of a hassle to parse/implement
+        if (rawArguments.endsWith('function')) continue;
 
         // Last argument
         if (argument) {
