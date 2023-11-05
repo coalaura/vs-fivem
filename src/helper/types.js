@@ -65,6 +65,8 @@ export function luaTypeToBasicType(type) {
             return 'any';
         case 'vector3':
             return 'vector3';
+        case 'function':
+            return 'function';
         case 'hash':
         case 'vehicle':
         case 'entity':
@@ -102,6 +104,8 @@ export function getDefaultValueForBasicType(type) {
             return 'nil';
         case 'vector3':
             return 'vector3(0.0, 0.0, 0.0)';
+        case 'function':
+            return 'function()end';
     }
 
     console.warn(`Unknown lua-type: ${type}`);
@@ -131,6 +135,7 @@ export function convertValueToBasicType(type, value) {
         case 'vector3':
             return `vector3(${number}, ${number}, ${number})`;
         case 'nil':
+        case 'function':
             return 'nil';
         case 'any':
             return value;
