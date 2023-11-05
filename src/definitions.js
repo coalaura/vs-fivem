@@ -1,6 +1,7 @@
 import vscode from 'vscode';
 
 import DefinitionIndex from './classes/definition-index.js';
+import { isMultiThreadIndexing } from './helper/config.js';
 
 const index = new DefinitionIndex();
 
@@ -13,22 +14,45 @@ export function buildFullIndex() {
         title: 'Indexing Workspace'
     }, async (progress) => {
         progress.report({
+            message: 'Collecting',
             increment: 0
         });
 
         const files = await vscode.workspace.findFiles('**/*.lua', '**/node_modules/**');
 
-        for (const [i, file] of files.entries()) {
-            const document = await vscode.workspace.openTextDocument(file);
+        let indexed = -1;
 
-            index.rebuild(document);
+        function report() {
+            indexed++;
 
-            const percentage = ((i / files.length) * 100).toFixed(1);
+            const percentage = ((indexed / files.length) * 100).toFixed(1);
 
             progress.report({
                 message: percentage + '%',
                 increment: 100 / files.length
             });
+        }
+
+        report();
+
+        if (isMultiThreadIndexing()) {
+            // Significantly faster but heavy on the CPU
+            await Promise.all(files.map(async file => {
+                const document = await vscode.workspace.openTextDocument(file);
+
+                index.rebuild(document);
+
+                report();
+            }));
+        } else {
+            // Slower but lighter on the CPU
+            for (const file of files) {
+                const document = await vscode.workspace.openTextDocument(file);
+
+                index.rebuild(document);
+
+                report();
+            }
         }
 
         progress.report({ increment: 100 });

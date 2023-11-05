@@ -6,7 +6,8 @@ import { on } from './singletons/event-bus.js';
 import { matchAll, extractAllFunctionCalls } from './helper/regexp.js';
 import { getFileContext } from './helper/natives.js';
 import { onAnyDocumentChange } from './helper/listeners.js';
-import { isSupportingLuaGLM, parse } from './helper/luaparse.js';
+import { parse } from './helper/luaparse.js';
+import { isLuaGLM } from './helper/config';
 import { getDefaultValueForBasicType, luaTypeToBasicType, detectBasicTypeFromValue, convertValueToBasicType } from './helper/types.js';
 
 import DiagnosticIndex from './classes/diagnostic-index.js';
@@ -47,7 +48,7 @@ export function refreshDiagnosticsNow(doc) {
 
 	// General knowledge
 	for (const check of Knowledge) {
-		if (check.lua_glm && !isSupportingLuaGLM()) continue;
+		if (check.lua_glm && !isLuaGLM()) continue;
 
 		const regex = check.regex;
 

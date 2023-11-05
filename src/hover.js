@@ -3,13 +3,13 @@ import vscode from 'vscode';
 import nativeIndex from './singletons/native-index.js';
 import { joaat } from './helper/joaat.js';
 import { getFileContext } from './helper/natives.js';
-import { isSupportingLuaGLM } from './helper/luaparse.js';
+import { isLuaGLM } from './helper/config';
 
 export function registerHoverProvider(context) {
     vscode.languages.registerHoverProvider('lua', {
         provideHover(document, position) {
             // Vector swizzle support
-            if (isSupportingLuaGLM()) {
+            if (isLuaGLM()) {
                 const wordRange = document.getWordRangeAtPosition(position, /\.[\w]+/),
                     word = wordRange ? document.getText(wordRange) : false;
 
