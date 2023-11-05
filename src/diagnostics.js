@@ -7,6 +7,7 @@ import { matchAll, extractAllFunctionCalls } from './helper/regexp.js';
 import { getFileContext } from './helper/natives.js';
 import { onAnyDocumentChange } from './helper/listeners.js';
 import { isSupportingLuaGLM, parse } from './helper/luaparse.js';
+import { getDefaultValueForBasicType, luaTypeToBasicType, detectBasicTypeFromValue, convertValueToBasicType } from './helper/types.js';
 
 import DiagnosticIndex from './classes/diagnostic-index.js';
 import Diagnostic from './classes/diagnostic.js';
@@ -15,41 +16,6 @@ import Knowledge from './data/knowledge.js';
 const index = new DiagnosticIndex();
 
 const diagnosticsTimeouts = {};
-
-function matchesBasicType(actual, expected) {
-	if (!actual) return true;
-
-	expected = expected.toLowerCase();
-
-	if (expected.startsWith('any')) return true;
-
-	// Make sure we have basic types only
-	if (['hash', 'ped', 'object', 'player', 'entity', 'vehicle', 'blip', 'cam', 'pickup', 'long'].includes(expected)) {
-		expected = 'integer';
-	}
-
-	return actual === expected;
-}
-
-function resolveArgumentType(argument) {
-	if (argument === 'true' || argument === 'false') {
-		return 'boolean';
-	} else if (argument === 'nil') {
-		return 'nil';
-	}
-
-	if ((argument.startsWith('"') && argument.endsWith('"')) || (argument.startsWith("'") && argument.endsWith("'"))) {
-		return 'string';
-	}
-
-	if (argument.match(/^\d+$/)) {
-		return 'integer';
-	} else if (argument.match(/^\d+\.\d+$/)) {
-		return 'number';
-	}
-
-	return false;
-}
 
 function resolveSeverity(type) {
 	switch (type) {
@@ -146,24 +112,44 @@ export function refreshDiagnosticsNow(doc) {
 	for (const call of calls) {
 		const native = nativeIndex.get(call.name, context);
 
-		if (!native) continue;
+		if (!native) {
+			continue;
+		}
 
-		const callArguments = call.arguments;
+		const callArguments = call.arguments,
+			argLength = callArguments.length,
+			paramLength = native.parameters.length;
 
 		// Wrong number of arguments
-		if (callArguments.length !== native.params.length) {
-			diagnostics.push(new Diagnostic(call.range(doc), `${native.name} expects ${native.params.length} arguments instead of ${callArguments.length}.`, vscode.DiagnosticSeverity.Warning));
+		if (argLength !== paramLength) {
+			// If we have less arguments than parameters, we can add the default values
+			if (argLength < paramLength) {
+				while (callArguments.length < paramLength) {
+					const param = native.parameters[callArguments.length];
+
+					callArguments.push({
+						value: getDefaultValueForBasicType(param.type)
+					});
+				}
+			}
+
+			const replacement = `${call.name}(${callArguments.slice(0, paramLength).map(argument => argument.value).join(', ')})`;
+
+			diagnostics.push(new Diagnostic(call.range(doc), `${native.name} expects ${paramLength} arguments instead of ${argLength}.`, vscode.DiagnosticSeverity.Warning, replacement));
 
 			continue;
 		}
 
 		// Wrong argument types
 		for (const [index, argument] of callArguments.entries()) {
-			const param = native.params[index],
-				argType = resolveArgumentType(argument.value);
+			const param = native.parameters[index],
+				paramType = luaTypeToBasicType(param.type),
+				argType = detectBasicTypeFromValue(argument.value);
 
-			if (!matchesBasicType(argType, param.type)) {
-				diagnostics.push(new Diagnostic(argument.range(doc), `${native.name} expects ${param.type} for parameter ${index + 1}.`, vscode.DiagnosticSeverity.Warning));
+			if (paramType !== 'any' && argType !== 'any' && paramType !== argType) {
+				const replacement = convertValueToBasicType(paramType, argument.value);
+
+				diagnostics.push(new Diagnostic(argument.range(doc), `${native.name} expects ${param.type} for parameter ${index + 1}.`, vscode.DiagnosticSeverity.Warning, replacement));
 			}
 		}
 	}

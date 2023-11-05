@@ -1,5 +1,7 @@
 import { basename } from 'path';
 
+import { nativeTypeToLuaType } from '../helper/types.js';
+
 const underscore = ['3d', '2d', '2'];
 
 // Gets the context of the current position (client or server)
@@ -15,29 +17,6 @@ export function getFileContext(filename) {
     }
 
     return 'client';
-}
-
-// Converts the native type to a Lua-friendly type
-export function createLuaType(type) {
-    switch (type.toLowerCase()) {
-        case 'vector4':
-        case 'vector3':
-        case 'vector2':
-            return type.toLowerCase();
-        case 'float':
-            return 'number';
-        case 'int':
-            return 'integer';
-        case 'bool':
-            return 'boolean';
-        case 'char':
-        case 'char*':
-            return 'string';
-        case 'any':
-            return 'any';
-    }
-
-    return type;
 }
 
 // Converts the native name to a Lua-friendly name
@@ -63,14 +42,14 @@ export function resolveParametersAndReturns(name, json) {
     let parameters = (json.params || []).map(param => {
         return {
             name: param.name,
-            type: createLuaType(param.type),
+            type: nativeTypeToLuaType(param.type),
             description: param.description
         };
     });
 
     let returns = json.results && json.results !== 'void' ? [{
         name: 'retval',
-        type: createLuaType(json.results),
+        type: nativeTypeToLuaType(json.results),
         description: json.returnDescription
     }] : [];
 

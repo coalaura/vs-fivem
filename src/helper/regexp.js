@@ -21,8 +21,9 @@ export function extractAllFunctionCalls(code) {
 
     for (const match of matches) {
         const callIndex = match.index,
+            argIndex = match.index + match[0].indexOf(match[2]),
             name = match[1],
-            rawArguments = match[2].trim();
+            rawArguments = match[2];
 
         // Ignore definitions
         if (code.includes(`function ${name}`)) continue;
@@ -39,25 +40,24 @@ export function extractAllFunctionCalls(code) {
                 const char = rawArguments[index];
 
                 if (char === '(') {
-                    if (level === 0) {
-                        start = index + 1;
-                    }
-
                     level++;
                 } else if (char === ')') {
                     level--;
                 }
 
                 if (char === ',' && level === 0) {
+                    if (argument[0] === ' ') start++;
+
                     arguments_.push({
                         value: argument.trim(),
-                        start: callIndex + start,
-                        end: callIndex + index,
+                        start: argIndex + start,
+                        end: argIndex + index,
 
                         range: _resolveRange
                     });
 
                     argument = '';
+                    start = index + 1;
                 } else {
                     argument += char;
                 }
@@ -65,10 +65,12 @@ export function extractAllFunctionCalls(code) {
 
             // Last argument
             if (argument) {
+                if (argument[0] === ' ') start++;
+
                 arguments_.push({
                     value: argument.trim(),
-                    start: callIndex + start,
-                    end: callIndex + rawArguments.length,
+                    start: argIndex + start,
+                    end: argIndex + rawArguments.length,
 
                     range: _resolveRange
                 });
@@ -76,16 +78,18 @@ export function extractAllFunctionCalls(code) {
         } else if (rawArguments) {
             let offset = 0;
 
-            arguments_ = rawArguments.split(',').map(param => {
-                const start = callIndex + rawArguments.indexOf(param, offset),
-                    end = start + param.length;
+            arguments_ = rawArguments.split(',').map(argument => {
+                let start = rawArguments.indexOf(argument, offset),
+                    end = start + argument.length;
 
-                offset = end + 1;
+                offset = end;
+
+                if (argument[0] === ' ') start++;
 
                 return {
-                    value: param.trim(),
-                    start: start,
-                    end: end,
+                    value: argument.trim(),
+                    start: argIndex + start,
+                    end: argIndex + end,
 
                     range: _resolveRange
                 };

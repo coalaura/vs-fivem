@@ -1,5 +1,7 @@
 import vscode from 'vscode';
 import fetch from 'node-fetch';
+import {writeFileSync} from 'fs';
+import {join} from 'path';
 
 import Native from './classes/native.js';
 import nativeIndex from './singletons/native-index.js';
@@ -46,6 +48,22 @@ export function resolveAllNatives(context) {
         if (!ok1 || !ok2) {
             vscode.window.showWarningMessage('Failed to update natives list.');
         }
+
+        const types = nativeIndex.natives.map(native => {
+            const types = [];
+
+            native.parameters.map(param => {
+                types.push(param.type);
+            });
+
+            native.returns.map(ret => {
+                types.push(ret.type);
+            });
+
+            return types;
+        }).flat().filter((value, index, self) => self.indexOf(value) === index);
+
+        writeFileSync(join(__dirname, 'types.json'), JSON.stringify(types, null, 4));
 
         emit('natives');
 
