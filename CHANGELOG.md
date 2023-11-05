@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.2]
+- Upgraded luaparse-glm to fix a few issues with parsing
+
 ## [2.0.1]
 - Improved type checking for natives
 - Events now also have "go-to-definition" support
