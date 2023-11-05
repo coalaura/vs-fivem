@@ -26,6 +26,10 @@ function resolveResourceName(document) {
 export default class DefinitionIndex {
     constructor() {
         this.definitions = {};
+        this.events = {
+            client: {},
+            server: {}
+        };
 
         this.resources = {};
     }
@@ -78,12 +82,29 @@ export default class DefinitionIndex {
             }
         }
 
+        if (context === 'client' || context === 'server') {
+            const eventRegistrations = matchAll(/RegisterNetEvent\((["'])(.+?)\1\)/g, text);
+
+            for (const registration of eventRegistrations) {
+                const event = registration[2];
+
+                const position = document.positionAt(registration.index);
+
+                this.events[context][event] = {
+                    file: name,
+                    line: position.line,
+                    character: position.character,
+                    length: registration[0].length
+                };
+            }
+        }
+
         this.definitions[name] = {
             name: name,
             context: context,
             resource: resource,
             globals: globals,
-            locals: locals,
+            locals: locals
         };
 
         this.resources[resource] = this.resources[resource] || {};
@@ -91,53 +112,92 @@ export default class DefinitionIndex {
     }
 
     resolveDefinition(document, position) {
-        const wordRange = document.getWordRangeAtPosition(position, /[\w.:]+/),
-            word = wordRange ? document.getText(wordRange) : false;
+        // Local and global function definitions.
+        {
+            const wordRange = document.getWordRangeAtPosition(position, /[\w.:]+/),
+                word = wordRange ? document.getText(wordRange) : false;
 
-        if (!word) return null;
+            if (word) {
+                // Don't resolve if we hovered over the base of a member access.
+                if (word.includes('.') || word.includes(':')) {
+                    const base = word.split(/\.|:/).shift();
 
-        // Don't resolve if we hovered over the base of a member access.
-        if (word.includes('.') || word.includes(':')) {
-            const base = word.split(/\.|:/).shift();
+                    const partRange = document.getWordRangeAtPosition(position, /[\w]+/),
+                        part = partRange ? document.getText(partRange) : false;
 
-            const partRange = document.getWordRangeAtPosition(position, /[\w]+/),
-                part = partRange ? document.getText(partRange) : false;
+                    if (base === part) return null;
+                }
 
-            if (base === part) return null;
-        }
+                const name = document.fileName,
+                    resource = resolveResourceName(document),
+                    context = getFileContext(name);
 
-        const name = document.fileName,
-            resource = resolveResourceName(document),
-            context = getFileContext(name);
+                // Is the function defined in this file?
+                if (name in this.definitions) {
+                    const definition = this.definitions[name],
+                        local = definition.locals[word],
+                        global = definition.globals[word];
 
-        // Is the function defined in this file?
-        if (name in this.definitions) {
-            const definition = this.definitions[name],
-                local = definition.locals[word],
-                global = definition.globals[word];
+                    if (local && local.line < position.line) {
+                        return this.toLocation(name, local);
+                    } else if (global && global.line !== position.line) {
+                        return this.toLocation(name, global);
+                    }
+                }
 
-            if (local && local.line < position.line) {
-                return this.toLocation(name, local);
-            } else if (global && global.line !== position.line) {
-                return this.toLocation(name, global);
+                // Is the function defined in another file in this resource?
+                if (!(resource in this.resources)) return null;
+
+                for (const file in this.resources[resource]) {
+                    if (file === name) continue;
+
+                    const def = this.definitions[file];
+
+                    if (!def || (def.context !== context && def.context !== 'shared')) continue;
+
+                    const global = def.globals[word];
+
+                    if (!global) continue;
+
+                    return this.toLocation(file, global);
+                }
             }
         }
 
-        // Is the function defined in another file in this resource?
-        if (!(resource in this.resources)) return null;
+        // Event registrations.
+        {
+            const wordRange = document.getWordRangeAtPosition(position, /(["'])(.+?)\1/),
+                word = wordRange ? document.getText(wordRange) : false;
 
-        for (const file in this.resources[resource]) {
-            if (file === name) continue;
+            if (word) {
+                const name = word.slice(1, -1);
 
-            const def = this.definitions[file];
+                // Don't resolve if we hovered over the base of a member access.
+                if (name.match(/[^\w]/)) {
+                    const last = name.split(/[^\w]+/).pop();
 
-            if (!def || (def.context !== context && def.context !== 'shared')) continue;
+                    const partRange = document.getWordRangeAtPosition(position, /[\w]+/),
+                        part = partRange ? document.getText(partRange) : false;
 
-            const global = def.globals[word];
+                    if (last !== part) return null;
+                }
 
-            if (!global) continue;
+                const context = getFileContext(name),
+                    inverseContext = context === 'client' ? 'server' : 'client';
 
-            return this.toLocation(file, global);
+                if (name in this.events[inverseContext]) {
+                    const event = this.events[inverseContext][name];
+
+                    return this.toLocation(event.file, event);
+                }
+
+                // Triggering an event from the same context is valid, but a bit ugly.
+                if (name in this.events[context]) {
+                    const event = this.events[context][name];
+
+                    return this.toLocation(event.file, event);
+                }
+            }
         }
 
         return null;
