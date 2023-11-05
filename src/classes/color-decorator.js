@@ -1,14 +1,27 @@
 import vscode from 'vscode';
 
+import { matchAll } from '../helper/regexp.js';
+
 function extractColor(text) {
     // Normal RGB(A) color
-    const rgba = text.match(/\d+/g);
+    const rgba = text.match(/\d+(\.\d+)?/g);
 
     if (rgba && rgba.length >= 3) {
         const r = parseInt(rgba[0]),
             g = parseInt(rgba[1]),
-            b = parseInt(rgba[2]),
-            a = rgba[3] ? parseInt(rgba[3]) : 255;
+            b = parseInt(rgba[2]);
+
+        let a = 255;
+
+        if (rgba.length === 4) {
+            if (rgba[3].includes('.')) {
+                a = Math.floor(parseFloat(rgba[3]) * 255);
+            } else {
+                a = parseInt(rgba[3]);
+            }
+
+            a = a ? a : 255;
+        }
 
         return { r, g, b, a };
     }
@@ -91,8 +104,8 @@ export default class ColorDecorator {
 
     updateDecorations(editor, document) {
         const expressions = [
-            /#([0-9a-z]{3,8})/gi,
-            /rgba?\(\d+, \d+, \d+(, \d+)?\)/gi,
+            /(?<=['"])#([0-9a-f]{3,8})/gi,
+            /rgba?\(\d+, \d+, \d+(, \d+(\.\d+)?)?\)/gi,
         ];
 
         this.clear();
@@ -100,16 +113,16 @@ export default class ColorDecorator {
         const text = document.getText();
 
         for (const regex of expressions) {
-            let m;
+            const matches = matchAll(regex, text);
 
-            if ((m = regex.exec(text)) !== null) {
-                const rgba = extractColor(m[0]);
+            for (const match of matches) {
+                const rgba = extractColor(match[0]);
 
                 if (!rgba) continue;
 
                 const range = new vscode.Range(
-                    document.positionAt(m.index),
-                    document.positionAt(m.index + m[0].length)
+                    document.positionAt(match.index),
+                    document.positionAt(match.index + match[0].length)
                 );
 
                 this.add(rgba, range);

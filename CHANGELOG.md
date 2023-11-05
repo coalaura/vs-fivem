@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.0.1]
+- Improved type checking for natives
+- Events now also have "go-to-definition" support
+- Improved indexing performance and speed by multiple orders of magnitude
+- Fixed some natives having their returns and parameters flipped
+- Refactored function call parsing to handle a lot more edge cases
+- Improved color highlighter
+
 ## [2.0.0]
 - Completely rewrote the extension, cleaning up the code a lot
 - Added a color highlighter
