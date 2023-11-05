@@ -58,8 +58,6 @@ export function resolveParametersAndReturns(name, json) {
         return paramObject;
     }).filter(Boolean);
 
-    if (name === 'RemoveIpl') console.log(parameters, returns);
-
     // Are return values being passed by reference?
     const passByReference = name.startsWith('Delete') || name.startsWith('Remove') || name.endsWith('AsNoLongerNeeded') || ['DoesRopeExist', 'ClearSequenceTask'].includes(name);
 
