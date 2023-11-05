@@ -17,94 +17,83 @@ export function matchAll(regex, str) {
 export function extractAllFunctionCalls(code) {
     const calls = [];
 
-    const matches = matchAll(/([\w.:]+) ?\((.*?)\)(?=$|[; ])/gm, code);
+    const matches = matchAll(/([\w.:]+) ?\(/g, code);
 
     for (const match of matches) {
         const callIndex = match.index,
-            argIndex = match.index + match[0].indexOf(match[2]),
             name = match[1],
-            rawArguments = match[2];
+            argIndex = callIndex + match[0].length;
 
         // Ignore definitions
         if (code.includes(`function ${name}`)) continue;
 
-        let arguments_ = [];
+        const arguments_ = [];
 
-        // Nested function calls
-        if (rawArguments.includes('(')) {
-            let level = 0,
-                start = 0,
-                argument = '';
+        let level = 0,
+            start = argIndex,
+            argument = '',
+            rawArguments = '';
 
-            for (let index = 0; index < rawArguments.length; index++) {
-                const char = rawArguments[index];
+        let end = argIndex;
 
-                if (char === '(') {
-                    level++;
-                } else if (char === ')') {
-                    level--;
-                }
+        for (let index = argIndex; index < code.length; index++) {
+            const char = code[index];
 
-                if (char === ',' && level === 0) {
-                    if (argument[0] === ' ') start++;
+            if (char === '(') {
+                level++;
+            } else if (char === ')') {
+                level--;
 
-                    arguments_.push({
-                        value: argument.trim(),
-                        start: argIndex + start,
-                        end: argIndex + index,
+                // End of argument list
+                if (level < 0) {
+                    end = index + 1;
 
-                        range: _resolveRange
-                    });
-
-                    argument = '';
-                    start = index + 1;
-                } else {
-                    argument += char;
+                    break;
                 }
             }
 
-            // Last argument
-            if (argument) {
+            rawArguments += char;
+
+            if (char === ',' && level === 0) {
                 if (argument[0] === ' ') start++;
 
                 arguments_.push({
                     value: argument.trim(),
-                    start: argIndex + start,
-                    end: argIndex + rawArguments.length,
+                    start: start,
+                    end: index,
 
                     range: _resolveRange
                 });
+
+                argument = '';
+                start = index + 1;
+            } else {
+                argument += char;
             }
-        } else if (rawArguments) {
-            let offset = 0;
+        }
 
-            arguments_ = rawArguments.split(',').map(argument => {
-                let start = rawArguments.indexOf(argument, offset),
-                    end = start + argument.length;
+        // Last argument
+        if (argument) {
+            if (argument[0] === ' ') start++;
 
-                offset = end;
+            arguments_.push({
+                value: argument.trim(),
+                start: start,
+                end: end - 1,
 
-                if (argument[0] === ' ') start++;
-
-                return {
-                    value: argument.trim(),
-                    start: argIndex + start,
-                    end: argIndex + end,
-
-                    range: _resolveRange
-                };
+                range: _resolveRange
             });
         }
 
         calls.push({
-            raw: match[0],
+            raw: match[0] + rawArguments + ')',
             rawArguments: rawArguments,
 
             name: name,
             arguments: arguments_,
 
             start: callIndex,
-            end: callIndex + match[0].length,
+            end: end,
 
             range: _resolveRange
         });

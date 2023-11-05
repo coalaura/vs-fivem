@@ -42,7 +42,7 @@ export function nativeTypeToLuaType(type) {
             return 'any';
     }
 
-    console.warn(`Unknown native-type: ${type}`);
+    console.warn(`[nativeTypeToLuaType] Unknown native-type: ${type}`);
 
     return 'any';
 }
@@ -81,7 +81,7 @@ export function luaTypeToBasicType(type) {
             return 'integer';
     }
 
-    console.warn(`Unknown lua-type: ${type}`);
+    console.warn(`[luaTypeToBasicType] Unknown lua-type: ${type}`);
 
     return 'any';
 }
@@ -108,7 +108,7 @@ export function getDefaultValueForBasicType(type) {
             return 'function()end';
     }
 
-    console.warn(`Unknown lua-type: ${type}`);
+    console.warn(`[getDefaultValueForBasicType] Unknown lua-type: ${type}`);
 
     return 'false';
 }
@@ -141,7 +141,7 @@ export function convertValueToBasicType(type, value) {
             return value;
     }
 
-    console.warn(`Unknown basic-type: ${type}`);
+    console.warn(`[convertValueToBasicType] Unknown basic-type: ${type}`);
 
     return 'false';
 }

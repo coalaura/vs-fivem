@@ -126,10 +126,11 @@ export function refreshDiagnosticsNow(doc) {
 			// If we have less arguments than parameters, we can add the default values
 			if (argLength < paramLength) {
 				while (callArguments.length < paramLength) {
-					const param = native.parameters[callArguments.length];
+					const param = native.parameters[callArguments.length],
+						basicType = luaTypeToBasicType(param.type);
 
 					callArguments.push({
-						value: getDefaultValueForBasicType(param.type)
+						value: getDefaultValueForBasicType(basicType)
 					});
 				}
 			}
