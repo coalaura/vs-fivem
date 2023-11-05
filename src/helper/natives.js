@@ -39,19 +39,28 @@ export function createNativeLuaName(name) {
 }
 
 export function resolveParametersAndReturns(name, json) {
-    let parameters = (json.params || []).map(param => {
-        return {
-            name: param.name,
-            type: nativeTypeToLuaType(param.type),
-            description: param.description
-        };
-    });
-
     let returns = json.results && json.results !== 'void' ? [{
         name: 'retval',
         type: nativeTypeToLuaType(json.results),
         description: json.returnDescription
     }] : [];
+
+    let parameters = (json.params || []).map(param => {
+        const paramObject = {
+            name: param.name,
+            type: nativeTypeToLuaType(param.type),
+            description: param.description
+        };
+
+        // If the parameter is a pointer, it's an output parameter
+        if (param.type.endsWith('*') && param.type !== 'char*') {
+            returns.push(paramObject);
+
+            return null;
+        }
+
+        return paramObject;
+    }).filter(Boolean);
 
     // Are return values being passed by reference?
     const passByReference = name.startsWith('Delete') || name.startsWith('Remove') || name.endsWith('AsNoLongerNeeded') || ['DoesRopeExist', 'ClearSequenceTask'].includes(name);
