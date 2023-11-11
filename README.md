@@ -44,6 +44,11 @@ The extension will try to detect the context of the current file (server or clie
 
 ![suggestions](.github/suggestions.png)
 
+### Color highlighting
+The extension will automatically try to detect any color values and highlight them.
+
+![colors](.github/colors.png)
+
 ### Hover support
 The extension will show a preview of a hash function when hovering over it. With lua-glm enabled it also provides hover suggestions for vector swizzling.
 

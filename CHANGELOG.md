@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.3]
+- Improved resource generation (context action)
+
 ## [2.0.2]
 - Upgraded luaparse-glm to fix a few issues with parsing
 
