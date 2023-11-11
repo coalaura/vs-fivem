@@ -54,9 +54,11 @@ export function registerDefinitionProvider(context) {
     }, null, context.subscriptions);
 
     vscode.workspace.onDidChangeTextDocument(event => {
-        if (event.document.isUntitled) return;
+        const document = event.document;
 
-        index.rebuild(event.document);
+        if (!document || document.isUntitled) return;
+
+        index.rebuild(document.fileName, document.getText());
     }, null, context.subscriptions);
 
     vscode.workspace.onDidDeleteFiles(event => {

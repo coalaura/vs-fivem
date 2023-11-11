@@ -2,6 +2,7 @@
 
 ## [2.0.3]
 - Improved resource generation (context action)
+- Fix index not being rebuilt properly when a file is changed
 
 ## [2.0.2]
 - Upgraded luaparse-glm to fix a few issues with parsing

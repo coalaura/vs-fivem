@@ -53,10 +53,22 @@ export default class DefinitionIndex {
     }
 
     delete(name) {
+        const context = getFileContext(name);
+
         delete this.definitions[name];
 
         for (const resource in this.resources) {
             delete this.resources[resource][name];
+        }
+
+        if (context in this.events) {
+            for (const eventName in this.events[context]) {
+                const event = this.events[context][eventName];
+
+                if (event.file === name) {
+                    delete this.events[context][event];
+                }
+            }
         }
     }
 
