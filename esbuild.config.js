@@ -37,6 +37,10 @@ async function build() {
                 src: 'src/view',
                 dest: 'dist/view',
             }),
+            copyStaticFiles({
+                src: 'src/templates',
+                dest: 'dist/templates',
+            }),
             watchNotifyPlugin,
         ],
     });

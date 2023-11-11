@@ -1,5 +1,8 @@
 import vscode from 'vscode';
 
+import { readdirSync, existsSync, mkdirSync, statSync, readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
+
 async function createNewResource(folder) {
 	folder = vscode.workspace.getWorkspaceFolder(folder);
 
@@ -21,29 +24,34 @@ async function createNewResource(folder) {
 
 	const path = folder.uri.fsPath + '/' + name;
 
-	await vscode.workspace.fs.createDirectory(vscode.Uri.file(path));
+	function buildResource(base, dir = '') {
+		const dirPath = join(base, dir),
+			files = readdirSync(dirPath);
 
-	const files = {
-		'fxmanifest.lua': `fx_version "cerulean"
+		const dist = join(path, dir);
 
-game "gta5"
+		if (!existsSync(dist)) {
+			mkdirSync(dist);
+		}
 
-server_scripts {
-	"server.lua"
-}
+		for (const file of files) {
+			const srcPath = join(dirPath, file);
 
-client_scripts {
-	"client.lua"
-}
+			const isDir = statSync(srcPath).isDirectory();
 
-lua54 "yes"`,
-		'client.lua': `-- This is a client script`,
-		'server.lua': `-- This is a server script`
-	};
+			if (isDir) {
+				buildResource(base, join(dir, file));
+			} else {
+				const distPath = join(dist, file);
 
-	for (const [file, contents] of Object.entries(files)) {
-		await vscode.workspace.fs.writeFile(vscode.Uri.file(path + '/' + file), Buffer.from(contents + "\n"));
+				const content = readFileSync(srcPath, 'utf8');
+
+				writeFileSync(distPath, content.replace(/\[resource\]/g, name));
+			}
+		}
 	}
+
+	buildResource(join(__dirname, './templates/[resource]'));
 }
 
 function _indices(text, select, eol) {
