@@ -1,11 +1,14 @@
 # Change Log
 
+## [2.0.4]
+- Added snippet support (e.g. typing `thread` then pressing enter will insert `Citizen.CreateThread(function()end)`)
+
 ## [2.0.3]
 - Improved resource generation (context action)
 - Fix index not being rebuilt properly when a file is changed
 
 ## [2.0.2]
-- Upgraded luaparse-glm to fix a few issues with parsing
+- Upgraded [luaparse-glm](https://npmjs.com/package/@coalaura/luaparse-glm) to fix a few issues with parsing
 
 ## [2.0.1]
 - Improved type checking for natives
@@ -34,7 +37,7 @@
 - Added esbuild config
 
 ## [1.3.8]
-- Removed "math.round" suggestion since it doesn't actually return an integer so math.floor(n + 0.5) ~= math.round(n)
+- Removed `math.round` suggestion since it doesn't actually return an integer so `math.floor(n + 0.5) ~= math.round(n)`
 
 ## [1.3.7]
 - Cleaned up extension code some more
@@ -52,15 +55,15 @@
 - Improved and extended native hover information
 
 ## [1.3.4]
-- Fixed bug where the lua-glm parser would incorrectly replace "in ipairs" with "table.unpack"
+- Fixed bug where the lua-glm parser would incorrectly replace `in ipairs` with `table.unpack`
 
 ## [1.3.3]
 - More fixes to the lua-glm parser
-- Added info diagnostic for math.floor(x + 0.5) to math.round(x)
+- Added info diagnostic for `math.floor(x + 0.5)` to `math.round(x)`
 
 ## [1.3.2]
 - Fixed a few issues with the lua-glm parser
-- The "in" quick fix now properly unwraps parentheses
+- The `in` quick fix now properly unwraps parentheses
 
 ## [1.3.1]
 - Fixed the slightly borked README.md
@@ -76,7 +79,7 @@
 - Clear diagnostics when language id is changed
 
 ## [1.2.14]
-- Added some more knowledge about Citizen.Wait
+- Added some more knowledge about `Citizen.Wait`
 
 ## [1.2.13]
 - Added a "Collect Statistics" context option
@@ -109,10 +112,10 @@
 - Check if basic native parameter types are correct
 
 ## [1.2.6]
-- Fixed code completions not being inline on "not"
+- Fixed code completions not being inline on `not`
 
 ## [1.2.5]
-- Fixed void returns adding "local retval"
+- Fixed void returns adding `local retval`
 - "Organize List" context action
 
 ## [1.2.4]
@@ -126,7 +129,7 @@
 
 ## [1.2.2]
 - Improve speed of statistics
-- Fixed some issues with code completion in if/while/etc. statements
+- Fixed some issues with code completion in `if`/`while`/etc. statements
 
 ## [1.2.1]
 - Fixed native search not working (oops)
@@ -165,5 +168,4 @@
 - Old native aliases are now highlighted as warnings
 
 ## [1.0.0]
-
 - Initial release

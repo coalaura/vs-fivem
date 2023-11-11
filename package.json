@@ -2,7 +2,7 @@
 	"name": "vs-fivem",
 	"displayName": "VS FiveM IntelliSense",
 	"description": "Adds highly detailed, in-depth, up-to-date fivem native support for lua to vs-code.",
-	"version": "2.0.3",
+	"version": "2.0.4",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
@@ -46,6 +46,11 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Support and diagnose [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md) syntax like `+=`."
+				},
+				"vs-fivem.snippets": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Automatically replace shortcuts like `thread`, `threadnow`, etc. when pressing enter. (Shift + Enter skips this)"
 				}
 			}
 		},
@@ -73,6 +78,17 @@
 			{
 				"command": "vs-fivem.createEnsureThread",
 				"title": "Snippets: Ensure New Thread"
+			},
+			{
+				"command": "vs-fivem.insertSnippet",
+				"title": "Snippets: Replace Shortcut"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "vs-fivem.insertSnippet",
+				"key": "enter",
+				"when": "editorTextFocus && editorLangId == lua && config.vs-fivem.snippets == true && snippetHandlerReady"
 			}
 		],
 		"menus": {
