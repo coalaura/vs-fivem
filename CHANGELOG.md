@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.5]
+- When ctrl-clicking on a definition itself, a global search will be performed now
+
 ## [2.0.4]
 - Added snippet support (e.g. typing `thread` then pressing enter will insert `Citizen.CreateThread(function()end)`)
 
