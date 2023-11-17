@@ -2,9 +2,7 @@ import vscode from 'vscode';
 
 import { readFileSync } from 'fs';
 
-import DefinitionIndex from './classes/definition-index.js';
-
-const index = new DefinitionIndex();
+import index from './singletons/definition-index.js';
 
 export function buildFullIndex() {
     index.clear();

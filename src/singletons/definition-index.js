@@ -35,7 +35,7 @@ function positionAt(text, index) {
     return { line, character };
 }
 
-export default class DefinitionIndex {
+class DefinitionIndex {
     constructor() {
         this.definitions = {};
         this.events = {
@@ -246,3 +246,7 @@ export default class DefinitionIndex {
         return new vscode.Location(file, new vscode.Range(from, to));
     }
 }
+
+const index = new DefinitionIndex();
+
+export default index;

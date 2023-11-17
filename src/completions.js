@@ -6,7 +6,7 @@ import { getFileContext } from './helper/natives.js';
 export function registerCompletions(context) {
     vscode.languages.registerCompletionItemProvider('lua', {
         provideCompletionItems(document, position) {
-            const wordRange = document.getWordRangeAtPosition(position, /[\w]+/),
+            const wordRange = document.getWordRangeAtPosition(position, /[\w.:]+/),
                 word = wordRange ? document.getText(wordRange) : false;
 
             if (!word) return [];
