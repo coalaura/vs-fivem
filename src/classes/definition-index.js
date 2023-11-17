@@ -204,6 +204,18 @@ export default class DefinitionIndex {
                     if (last !== part) return null;
                 }
 
+                const before = document.getText(new vscode.Range(position.with(undefined, 0), wordRange.start)).replace(/\s+/g, '');
+
+                // We clicked the definition of the event. Open a global search.
+                if (before.match(/Register(Net|Server|Client)(Event|Callback)\($|AddEventHandler\($/m)) {
+                    vscode.commands.executeCommand('workbench.action.findInFiles', {
+                        query: name,
+                        triggerSearch: true
+                    });
+
+                    return null;
+                }
+
                 const context = getFileContext(name),
                     inverseContext = context === 'client' ? 'server' : 'client';
 
