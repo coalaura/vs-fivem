@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.6]
+- Improved snippets
+
 ## [2.0.5]
 - When ctrl-clicking on a definition itself, a global search will be performed now
 

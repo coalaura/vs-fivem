@@ -8,7 +8,6 @@ import { registerHoverProvider } from './hover.js';
 import { registerContextInserts } from './context-inserts.js';
 import { registerWebViewProvider } from './webview.js';
 import { registerDefinitionProvider } from './definitions.js';
-import { registerSnippetCommands } from './snippets.js';
 
 let activated = false;
 
@@ -34,7 +33,6 @@ export function activate(context) {
 	registerContextInserts(context);
 	registerWebViewProvider(context);
 	registerDefinitionProvider(context);
-	registerSnippetCommands(context);
 }
 
 // This method is called when your extension is deactivated
