@@ -16,7 +16,7 @@ export default [
     },
     {
         prefix: 'tick',
-        body: 'Citizen.Wait(0)\n',
+        body: '$0\nCitizen.Wait(0)',
         description: 'Wait for the next tick'
     },
     {
