@@ -5,7 +5,7 @@ import { applyNativeOverrides } from '../data/overrides.js';
 
 export default class Native {
     constructor(json) {
-        this.context = json.apiset || 'shared';
+        this.context = json.apiset || 'client';
         this.hash = json.hash;
         this.namespace = json.ns;
 
