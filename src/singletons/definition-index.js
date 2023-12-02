@@ -4,6 +4,7 @@ import { join } from 'path';
 
 import { matchAll } from '../helper/regexp.js';
 import { getFileContext } from '../helper/natives.js';
+import { searchEventUsages } from '../helper/config.js';
 
 // Walk up the directory tree until we find a resource manifest file.
 function resolveResourceName(fileName) {
@@ -204,16 +205,18 @@ class DefinitionIndex {
                     if (last !== part) return null;
                 }
 
-                const before = document.getText(new vscode.Range(position.with(undefined, 0), wordRange.start)).replace(/\s+/g, '');
+                if (searchEventUsages()) {
+                    const before = document.getText(new vscode.Range(position.with(undefined, 0), wordRange.start)).replace(/\s+/g, '');
 
-                // We clicked the definition of the event. Open a global search.
-                if (before.match(/Register(Net|Server|Client)(Event|Callback)\($|AddEventHandler\($/m)) {
-                    vscode.commands.executeCommand('workbench.action.findInFiles', {
-                        query: name,
-                        triggerSearch: true
-                    });
+                    // We clicked the definition of the event. Open a global search.
+                    if (before.match(/Register(Net|Server|Client)(Event|Callback)\($|AddEventHandler\($/m)) {
+                        vscode.commands.executeCommand('workbench.action.findInFiles', {
+                            query: name,
+                            triggerSearch: true
+                        });
 
-                    return null;
+                        return null;
+                    }
                 }
 
                 const context = getFileContext(name),

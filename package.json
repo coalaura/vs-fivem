@@ -46,6 +46,11 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Support and diagnose [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md) syntax like `+=`."
+				},
+				"vs-fivem.searchEventUsages": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Start a global search for an event when pressing ctrl while having it selected."
 				}
 			}
 		},

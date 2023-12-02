@@ -28,5 +28,10 @@ export default [
         prefix: 'eventh',
         body: 'AddEventHandler("$0", function()\nend)',
         description: 'Create a network event handler'
+    },
+    {
+        prefix: 'loop',
+        body: 'while true do\n\t$0\n\n\tCitizen.Wait(0)\nend',
+        description: 'Create a while true loop that waits for each tick'
     }
 ];
