@@ -1,5 +1,10 @@
 # Change Log
 
+## [2.0.7]
+- Some new snippets
+- The event search is now toggled by a setting
+- Fixed apiset (context) being "shared" by default instead of "client"
+
 ## [2.0.6]
 - Improved snippets
 
