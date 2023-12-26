@@ -2,6 +2,7 @@ import { relative, basename } from 'path';
 import vscode from 'vscode';
 
 import nativeIndex from './singletons/native-index.js';
+import definitionIndex from './singletons/definition-index.js';
 import { on } from './singletons/event-bus.js';
 import { matchAll, extractAllFunctionCalls } from './helper/regexp.js';
 import { getFileContext } from './helper/natives.js';
@@ -44,6 +45,7 @@ export function refreshDiagnosticsNow(doc) {
 	const diagnostics = [];
 
 	const text = doc.getText(),
+		context = getFileContext(doc.fileName),
 		calls = extractAllFunctionCalls(text);
 
 	// General knowledge
@@ -86,6 +88,23 @@ export function refreshDiagnosticsNow(doc) {
 		}
 	}
 
+	// Accidentally overriding natives
+	const definitions = definitionIndex.get(doc.fileName);
+
+	console.log(doc.fileName);
+
+	for (const globalName in definitions.globals) {
+		console.log(globalName);
+		if (nativeIndex.get(globalName, context)) {
+			const global = definitions.globals[globalName],
+				location = definitionIndex.toLocation(doc.fileName, global, true);
+
+			const replacement = `_G["${globalName}"] = function`;
+
+			diagnostics.push(new Diagnostic(location.range, `Implicitly overriding native \`${globalName}\`, you should explicitly override it instead, to avoid accidental overrides.`, vscode.DiagnosticSeverity.Warning, replacement));
+		}
+	}
+
 	// Native aliases & hashes
 	for (const call of calls) {
 		const hash = nativeIndex.getNameFromHash(call.name);
@@ -108,8 +127,6 @@ export function refreshDiagnosticsNow(doc) {
 	}
 
 	// Native checks
-	const context = getFileContext(doc.fileName);
-
 	for (const call of calls) {
 		const native = nativeIndex.get(call.name, context);
 

@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.8]
+- Added a new diagnostic to prevent "accidental" native overrides
+
 ## [2.0.7]
 - Some new snippets
 - The event search is now toggled by a setting

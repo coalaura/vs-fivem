@@ -53,6 +53,10 @@ class DefinitionIndex {
         this.resources = {};
     }
 
+    get(name) {
+        return this.definitions[name];
+    }
+
     delete(name) {
         const context = getFileContext(name);
 
@@ -82,11 +86,12 @@ class DefinitionIndex {
         const globals = {},
             locals = {};
 
-        const definitions = matchAll(/(local )?function ([\w:.]+) ?\(.*?\)(?=$| )/gm, text);
+        const definitions = matchAll(/((local )?function ([\w:.]+)) ?\(.*?\)(?=$| )/gm, text);
 
         for (const definition of definitions) {
-            const local = definition[1] === 'local',
-                name = definition[2];
+            const prefix = definition[1],
+                local = definition[2] === 'local',
+                name = definition[3];
 
             const position = positionAt(text, definition.index);
 
@@ -94,13 +99,15 @@ class DefinitionIndex {
                 locals[name] = {
                     line: position.line,
                     character: position.character,
-                    length: definition[0].length
+                    length: definition[0].length,
+                    offset: prefix.length
                 };
             } else {
                 globals[name] = {
                     line: position.line,
                     character: position.character,
-                    length: definition[0].length
+                    length: definition[0].length,
+                    offset: prefix.length
                 };
             }
         }
@@ -240,11 +247,11 @@ class DefinitionIndex {
         return null;
     }
 
-    toLocation(fileName, func) {
+    toLocation(fileName, func, excludeArguments = false) {
         const file = vscode.Uri.file(fileName);
 
         const from = new vscode.Position(func.line, func.character),
-            to = new vscode.Position(func.line, func.character + func.length);
+            to = new vscode.Position(func.line, from.character + (excludeArguments ? func.offset : func.length));
 
         return new vscode.Location(file, new vscode.Range(from, to));
     }
