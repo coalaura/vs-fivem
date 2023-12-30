@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.9]
+- Removed some leftover debug code
+
 ## [2.0.8]
 - Added a new diagnostic to prevent "accidental" native overrides
 
