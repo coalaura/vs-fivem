@@ -91,10 +91,7 @@ export function refreshDiagnosticsNow(doc) {
 	// Accidentally overriding natives
 	const definitions = definitionIndex.get(doc.fileName);
 
-	console.log(doc.fileName);
-
 	for (const globalName in definitions.globals) {
-		console.log(globalName);
 		if (nativeIndex.get(globalName, context)) {
 			const global = definitions.globals[globalName],
 				location = definitionIndex.toLocation(doc.fileName, global, true);
