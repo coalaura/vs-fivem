@@ -2,7 +2,7 @@
 	"name": "vs-fivem",
 	"displayName": "VS FiveM IntelliSense",
 	"description": "Adds highly detailed, in-depth, up-to-date fivem native support for lua to vs-code.",
-	"version": "2.0.9",
+	"version": "2.0.10",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
@@ -35,7 +35,8 @@
 	],
 	"activationEvents": [
 		"workspaceContains:**/*.lua",
-		"onLanguage:lua"
+		"onLanguage:lua",
+		"onLanguage:json"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -65,19 +66,23 @@
 			},
 			{
 				"command": "vs-fivem.createResource",
-				"title": "VS-FiveM: Create new resource"
+				"title": "Create new FiveM resource"
 			},
 			{
 				"command": "vs-fivem.convertFxManifest",
-				"title": "VS-FiveM: Convert to fxmanifest.lua"
+				"title": "Convert to fxmanifest.lua"
 			},
 			{
 				"command": "vs-fivem.createEvent",
-				"title": "Snippets: Event Listener"
+				"title": "Insert Event Listener"
 			},
 			{
 				"command": "vs-fivem.createEnsureThread",
-				"title": "Snippets: Ensure New Thread"
+				"title": "Insert Ensure New Thread"
+			},
+			{
+				"command": "vs-fivem.convertJSON",
+				"title": "Convert JSON to Lua"
 			}
 		],
 		"menus": {
@@ -107,6 +112,11 @@
 				{
 					"when": "editorLangId == lua",
 					"command": "vs-fivem.createEnsureThread",
+					"group": "2_modification"
+				},
+				{
+					"when": "editorLangId == json",
+					"command": "vs-fivem.convertJSON",
 					"group": "2_modification"
 				}
 			]

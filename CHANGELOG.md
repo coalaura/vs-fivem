@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.10]
+- Added a "Convert JSON to Lua" command & context action
+
 ## [2.0.9]
 - Removed some leftover debug code
 
