@@ -9,6 +9,10 @@ export default class DiagnosticIndex {
         this.collection.delete(document.uri);
     }
 
+    clearAll() {
+        this.collection.clear();
+    }
+
     set(document, diagnostics) {
         if (diagnostics.length === 0) {
             this.clear(document);

@@ -2,7 +2,7 @@
 	"name": "vs-fivem",
 	"displayName": "VS FiveM IntelliSense",
 	"description": "Adds highly detailed, in-depth, up-to-date fivem native support for lua to vs-code.",
-	"version": "2.0.10",
+	"version": "2.0.11",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
@@ -63,6 +63,10 @@
 			{
 				"command": "vs-fivem.fixAll",
 				"title": "VS-FiveM: Fix all Diagnostics"
+			},
+			{
+				"command": "vs-fivem.clearAll",
+				"title": "VS-FiveM: Clear all Diagnostics"
 			},
 			{
 				"command": "vs-fivem.createResource",

@@ -355,6 +355,12 @@ export function registerDiagnostics(context) {
 		fixAllDiagnostics();
 	}, null, context.subscriptions);
 
+	vscode.commands.registerCommand('vs-fivem.clearAll', () => {
+		index.clearAll();
+
+		vscode.window.showInformationMessage('Cleared all diagnostics.');
+	}, null, context.subscriptions);
+
 	// Once natives are loaded
 	on('natives', () => {
 		const editor = vscode.window.activeTextEditor,
