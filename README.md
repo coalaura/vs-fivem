@@ -44,6 +44,10 @@ The extension will try to detect the context of the current file (server or clie
 
 ![suggestions](.github/suggestions.png)
 
+### Inline Hints
+
+![inline_hints](.github/inline_hints.png)
+
 ### Color highlighting
 The extension will automatically try to detect any color values and highlight them.
 

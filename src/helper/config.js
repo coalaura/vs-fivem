@@ -8,6 +8,10 @@ export function searchEventUsages() {
     return get('searchEventUsages');
 }
 
+export function showInlineHints() {
+    return get('showInlineHints');
+}
+
 function get(key) {
     const config = vscode.workspace.getConfiguration('vs-fivem');
 

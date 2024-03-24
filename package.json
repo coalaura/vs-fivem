@@ -52,6 +52,11 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Start a global search for an event when pressing ctrl while having it selected."
+				},
+				"vs-fivem.showInlineHints": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Show inline hints (e.g. PedConfigFlag resolve, etc.)."
 				}
 			}
 		},

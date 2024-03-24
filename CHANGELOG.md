@@ -1,5 +1,9 @@
 # Change Log
 
+## [2.0.11]
+- Added inline hints for `SetPedConfigFlags`, `GetPedConfigFlags` and `GetIsTaskActive`
+- Added a "Clear all Diagnostics" command
+
 ## [2.0.10]
 - Added a "Convert JSON to Lua" command & context action
 
