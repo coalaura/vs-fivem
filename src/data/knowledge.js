@@ -66,25 +66,25 @@ export default [
 	{
 		'func': 'Wait',
 		'message': 'Use Citizen.Wait instead of just Wait.',
-		'replace': 'Citizen.Wait',
+		'replace': 'Citizen.Wait($0)',
 		'type': 'warning'
 	},
 	{
 		'func': 'SetTimeout',
 		'message': 'Use Citizen.SetTimeout instead of just SetTimeout.',
-		'replace': 'Citizen.SetTimeout',
+		'replace': 'Citizen.SetTimeout($0)',
 		'type': 'warning'
 	},
 	{
 		'func': 'CreateThreadNow',
 		'message': 'Use Citizen.CreateThreadNow instead of just CreateThreadNow.',
-		'replace': 'Citizen.CreateThreadNow',
+		'replace': 'Citizen.CreateThreadNow($0)',
 		'type': 'warning'
 	},
 	{
 		'func': 'CreateThread',
 		'message': 'Use Citizen.CreateThread instead of just CreateThread.',
-		'replace': 'Citizen.CreateThread',
+		'replace': 'Citizen.CreateThread($0)',
 		'type': 'warning'
 	},
 

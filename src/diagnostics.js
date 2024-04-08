@@ -48,6 +48,8 @@ export function refreshDiagnosticsNow(doc) {
 		context = getFileContext(doc.fileName),
 		calls = extractAllFunctionCalls(text);
 
+	console.log(calls)
+
 	// General knowledge
 	for (const check of Knowledge) {
 		if (check.lua_glm && !isLuaGLM()) continue;
@@ -84,6 +86,8 @@ export function refreshDiagnosticsNow(doc) {
 			const replacement = check.replace ? check.replace.replace(/\$0/g, call.rawArguments) : false,
 				severity = resolveSeverity(check.type);
 
+			console.log(new Diagnostic(call.range(doc), check.message, severity, replacement));
+
 			diagnostics.push(new Diagnostic(call.range(doc), check.message, severity, replacement));
 		}
 	}
@@ -91,14 +95,16 @@ export function refreshDiagnosticsNow(doc) {
 	// Accidentally overriding natives
 	const definitions = definitionIndex.get(doc.fileName);
 
-	for (const globalName in definitions.globals) {
-		if (nativeIndex.get(globalName, context)) {
-			const global = definitions.globals[globalName],
-				location = definitionIndex.toLocation(doc.fileName, global, true);
+	if (definitions) {
+		for (const globalName in definitions.globals) {
+			if (nativeIndex.get(globalName, context)) {
+				const global = definitions.globals[globalName],
+					location = definitionIndex.toLocation(doc.fileName, global, true);
 
-			const replacement = `_G["${globalName}"] = function`;
+				const replacement = `_G["${globalName}"] = function`;
 
-			diagnostics.push(new Diagnostic(location.range, `Implicitly overriding native \`${globalName}\`, you should explicitly override it instead, to avoid accidental overrides.`, vscode.DiagnosticSeverity.Warning, replacement));
+				diagnostics.push(new Diagnostic(location.range, `Implicitly overriding native \`${globalName}\`, you should explicitly override it instead, to avoid accidental overrides.`, vscode.DiagnosticSeverity.Warning, replacement));
+			}
 		}
 	}
 

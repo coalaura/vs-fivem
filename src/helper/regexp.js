@@ -17,116 +17,80 @@ export function matchAll(regex, str) {
 export function extractAllFunctionCalls(code) {
     const calls = [];
 
-    const matches = matchAll(/([\w.:]+) ?\(/g, code);
+    const matches = matchAll(/\b([a-zA-Z_][\w_]*)(?:\.)?([^()\s]+)(?=\()/g, code);
 
     for (const match of matches) {
         const callIndex = match.index,
-            name = match[1],
-            argIndex = callIndex + match[0].length;
+            name = match[0];
 
-        // Ignore definitions
-        if (code.includes(`function ${name}`)) continue;
+        let args = [],
+            arg = '',
+            argStart = callIndex + name.length + 1;
 
-        const before = code.substring(code.lastIndexOf('\n', callIndex) + 1, callIndex),
-            beforeDQuotes = before.match(/(?<!\\)"/g) || [],
-            beforeSQuotes = before.match(/(?<!\\)'/g) || [];
+        let escaped = false,
+            quoted = false,
+            squoted = false,
+            brackets = 0,
+            index = argStart;
 
-        // Ignore if inside a string (odd number of not-escaped quotes)
-        if (beforeDQuotes.length % 2 !== 0 || beforeSQuotes.length % 2 !== 0) continue;
-
-        const arguments_ = [];
-
-        let level = 0,
-            start = argIndex,
-            string = false,
-            escape = false,
-            argument = '',
-            rawArguments = '';
-
-        let end = argIndex;
-
-        for (let index = argIndex; index < code.length; index++) {
+        for (index; index < code.length; index++) {
             const char = code[index];
 
-            if (string) {
-                if (escape) {
-                    escape = false;
-                } else if (char === '\\') {
-                    escape = true;
-                } else if (char === string) {
-                    string = false;
-                }
-            } else {
-                if (char === '"' || char === "'") {
-                    string = char;
-                } else if (char === '(') {
-                    level++;
+            if (escaped) {
+                escaped = false;
+            } else if (char === '\\') {
+                escaped = true;
+            } else if (char === '"') {
+                quoted = !quoted;
+            } else if (char === "'") {
+                squoted = !squoted;
+            } else if (char === '(') {
+                brackets++;
+            } else if (char === ')') {
+                brackets--;
+            } else if (char === ',' && brackets === 0) {
+                arg && args.push(_argument(arg, argStart, index));
 
-                    // Function definitions inside arguments is too much of a hassle to parse/implement
-                    if (rawArguments.endsWith('function')) break;
-                } else if (char === ')') {
-                    level--;
+                arg = '';
+                argStart = index + 1;
 
-                    // End of argument list
-                    if (level < 0) {
-                        end = index + 1;
-
-                        break;
-                    }
-                }
+                continue;
             }
 
-            rawArguments += char;
+            if (brackets < 0) break;
 
-            if (char === ',' && level === 0 && !string) {
-                if (argument[0] === ' ') start++;
-
-                arguments_.push({
-                    value: argument.trim(),
-                    start: start,
-                    end: index,
-
-                    range: _resolveRange
-                });
-
-                argument = '';
-                start = index + 1;
-            } else {
-                argument += char;
-            }
+            arg += char;
         }
 
-        // Function definitions inside arguments is too much of a hassle to parse/implement
-        if (rawArguments.endsWith('function')) continue;
+        arg && args.push(_argument(arg, argStart, index));
 
-        // Last argument
-        if (argument) {
-            if (argument[0] === ' ') start++;
-
-            arguments_.push({
-                value: argument.trim(),
-                start: start,
-                end: end - 1,
-
-                range: _resolveRange
-            });
-        }
+        const rawArguments = args.map(arg => arg.value).join(', ').trim();
 
         calls.push({
-            raw: match[0] + rawArguments + ')',
+            raw: `${name}(${rawArguments})`,
             rawArguments: rawArguments,
 
             name: name,
-            arguments: arguments_,
+            arguments: args,
 
             start: callIndex,
-            end: end,
+            end: index + 1,
 
             range: _resolveRange
         });
     }
 
     return calls;
+}
+
+function _argument(value, start, end) {
+    return {
+        value: value.trim(),
+        start: start,
+        end: end,
+
+        range: _resolveRange
+    };
 }
 
 function _resolveRange(document) {
