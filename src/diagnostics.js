@@ -48,8 +48,6 @@ export function refreshDiagnosticsNow(doc) {
 		context = getFileContext(doc.fileName),
 		calls = extractAllFunctionCalls(text);
 
-	console.log(calls)
-
 	// General knowledge
 	for (const check of Knowledge) {
 		if (check.lua_glm && !isLuaGLM()) continue;
@@ -85,8 +83,6 @@ export function refreshDiagnosticsNow(doc) {
 		for (const call of matchingCalls) {
 			const replacement = check.replace ? check.replace.replace(/\$0/g, call.rawArguments) : false,
 				severity = resolveSeverity(check.type);
-
-			console.log(new Diagnostic(call.range(doc), check.message, severity, replacement));
 
 			diagnostics.push(new Diagnostic(call.range(doc), check.message, severity, replacement));
 		}
