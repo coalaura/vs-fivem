@@ -91,7 +91,7 @@ export default [
 	// Lua-GLM extensions
 	// See: https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md
 	{
-		'regex': /([\w.]+)\s*=\s*\1\s*([+\-*/&|^]|<<|>>)/gi,
+		'regex': /([\w.]+)\s*=\s*\1[ \t]([+\-*/&|^]|<<|>>)/gi,
 		'message': 'FiveM supports +=, -=, *=, /=, <<=, >>=, &=, |=, and ^= operators.',
 		'replace': '$1 $2=',
 		'type': 'warning',
