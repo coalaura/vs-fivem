@@ -4,7 +4,8 @@ import vscode from 'vscode';
 import nativeIndex from './singletons/native-index.js';
 import definitionIndex from './singletons/definition-index.js';
 import { on } from './singletons/event-bus.js';
-import { matchAll, extractAllFunctionCalls } from './helper/regexp.js';
+import { matchAll } from './helper/regexp.js';
+import { extractAllFunctionCalls } from './helper/lua.js';
 import { getFileContext } from './helper/natives.js';
 import { onAnyDocumentChange } from './helper/listeners.js';
 import { parse } from './helper/luaparse.js';
@@ -42,11 +43,32 @@ export function refreshDiagnosticsNow(doc) {
 	// Not Lua? Not interested.
 	if (doc.languageId !== 'lua') return;
 
-	const diagnostics = [];
-
 	const text = doc.getText(),
-		context = getFileContext(doc.fileName),
-		calls = extractAllFunctionCalls(text);
+		diagnostics = [];
+
+	// Syntax errors
+	let ast;
+
+	try {
+		ast = parse(text, {
+            locations: true,
+            ranges: true,
+        });
+	} catch (e) {
+		if ('index' in e) {
+			const start = doc.positionAt(e.index),
+				end = doc.lineAt(start.line).range.end;
+
+			const range = new vscode.Range(start, end);
+
+			const message = e.message.replace(/^\[\d+:\d+]/, '');
+
+			diagnostics.push(new Diagnostic(range, message, vscode.DiagnosticSeverity.Error, false));
+		}
+	}
+
+	const context = getFileContext(doc.fileName),
+		calls = extractAllFunctionCalls(ast, text);
 
 	// General knowledge
 	for (const check of Knowledge) {
@@ -207,22 +229,6 @@ export function refreshDiagnosticsNow(doc) {
 		const range = new vscode.Range(position, position);
 
 		diagnostics.push(new Diagnostic(range, 'File should end with a newline', vscode.DiagnosticSeverity.Information, '\n'));
-	}
-
-	// Syntax errors
-	try {
-		parse(text);
-	} catch (e) {
-		if ('index' in e) {
-			const start = doc.positionAt(e.index),
-				end = doc.lineAt(start.line).range.end;
-
-			const range = new vscode.Range(start, end);
-
-			const message = e.message.replace(/^\[\d+:\d+]/, '');
-
-			diagnostics.push(new Diagnostic(range, message, vscode.DiagnosticSeverity.Error, false));
-		}
 	}
 
 	index.set(doc, diagnostics);
