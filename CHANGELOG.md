@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.12]
+- Using [luaparse-glm](https://npmjs.com/package/@coalaura/luaparse-glm) when resolving function calls for better accuracy
+
 ## [2.0.11]
 - Added inline hints for `SetPedConfigFlags`, `GetPedConfigFlags` and `GetIsTaskActive`
 - Added a "Clear all Diagnostics" command
