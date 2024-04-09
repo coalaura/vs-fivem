@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.13]
+- Fixed a regex matching too much when providing lua-glm suggestions
+
 ## [2.0.12]
 - Using [luaparse-glm](https://npmjs.com/package/@coalaura/luaparse-glm) when resolving function calls for better accuracy
 
