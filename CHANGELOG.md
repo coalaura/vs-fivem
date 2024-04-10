@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.16]
+- Dropped (expensive) definitions support in favor of [sumneko's lua language server](https://marketplace.visualstudio.com/items?itemName=sumneko.lua)
+
 ## [2.0.15]
 - Added inline hints for ped motion states, vehicle mods and vehicle wheel types
 
