@@ -1,5 +1,9 @@
 # Change Log
 
+## [2.0.14]
+- Updated the list of ped config flags
+- Added optional performance hints (can be toggled on in settings)
+
 ## [2.0.13]
 - Fixed a regex matching too much when providing lua-glm suggestions
 
