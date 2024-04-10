@@ -2,6 +2,7 @@ import vscode from 'vscode';
 
 import { getPedConfigFlagName } from './data/ped-config-flags.js';
 import { getPedTaskName } from './data/ped-tasks.js';
+import { getPedMotionStateName } from './data/ped-motion-states.js';
 import { matchAll } from './helper/regexp.js';
 import { showInlineHints } from './helper/config.js';
 import HintDecorator from './classes/hint-decorator.js';
@@ -29,7 +30,7 @@ function updateDecorationsIfNeeded(document) {
 function registerProviders() {
     // SetPedConfigFlag & GetPedConfigFlag
     decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=[SG]etPedConfigFlag\s*\(.+?,\s*)\d+/g, text);
+        const matches = matchAll(/(?<=[SG]etPedConfigFlag\s*\([^,]+?,\s*)\d+/g, text);
 
         return matches.map(match => {
             const id = parseInt(match[0]),
@@ -44,7 +45,7 @@ function registerProviders() {
 
     // GetIsTaskActive
     decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=GetIsTaskActive\s*\(.+?,\s*)\d+/g, text);
+        const matches = matchAll(/(?<=GetIsTaskActive\s*\([^,]+?,\s*)\d+/g, text);
 
         return matches.map(match => {
             const id = parseInt(match[0]),
@@ -56,6 +57,21 @@ function registerProviders() {
             };
         });
     });
+
+    // ForcePedMotionState
+    decorator.registerProvider(text => {
+        const matches = matchAll(/(?<=ForcePedMotionState\s*\([^,]+?,\s*)-?\d+/g, text);
+
+        return matches.map(match => {
+            const hash = parseInt(match[0]),
+                state = getPedMotionStateName(hash);
+
+            return {
+                hint: state,
+                index: match.index + match[0].length
+            }
+        })
+    })
 }
 
 export function registerHintDecorator(context) {
