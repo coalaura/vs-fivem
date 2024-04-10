@@ -3,6 +3,8 @@ import vscode from 'vscode';
 import { getPedConfigFlagName } from './data/ped-config-flags.js';
 import { getPedTaskName } from './data/ped-tasks.js';
 import { getPedMotionStateName } from './data/ped-motion-states.js';
+import { getVehicleModName } from './data/vehicle-mods.js';
+
 import { matchAll } from './helper/regexp.js';
 import { showInlineHints } from './helper/config.js';
 import HintDecorator from './classes/hint-decorator.js';
@@ -71,7 +73,22 @@ function registerProviders() {
                 index: match.index + match[0].length
             }
         })
-    })
+    });
+
+    // GetVehicleMod & SetVehicleMod & ToggleVehicleMod
+    decorator.registerProvider(text => {
+        const matches = matchAll(/(?<=(?:[GS]et|Toggle)VehicleMod\s*\([^,]+?,\s*)-?\d+/g, text);
+
+        return matches.map(match => {
+            const id = parseInt(match[0]),
+                mod = getVehicleModName(id);
+
+            return {
+                hint: mod,
+                index: match.index + match[0].length
+            }
+        })
+    });
 }
 
 export function registerHintDecorator(context) {

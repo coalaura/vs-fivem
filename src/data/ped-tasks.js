@@ -430,7 +430,7 @@ const PedTasks = [
 	{ id: 527, name: 'CTaskVehicleSurfaceInSubmarine' },
 	{ id: 528, name: 'CTaskVehiclePullAlongside' },
 	{ id: 529, name: 'CTaskVehicleTransformToSubmarine' },
-	{ id: 530, name: 'CTaskAnimatedFallback' },
+	{ id: 530, name: 'CTaskAnimatedFallback' }
 ];
 
 export function getPedTaskName(id) {

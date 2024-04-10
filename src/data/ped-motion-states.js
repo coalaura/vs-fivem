@@ -22,7 +22,7 @@ const PedMotionStates = [
     { name: 'MotionState_ActionMode_Idle', hash: -633298724 },
     { name: 'MotionState_ActionMode_Walk', hash: -762290521 },
     { name: 'MotionState_ActionMode_Run', hash: 834330132 },
-    { name: 'MotionState_Jetpack', hash: 1398696542 },
+    { name: 'MotionState_Jetpack', hash: 1398696542 }
 ];
 
 export function getPedMotionStateName(hash) {
