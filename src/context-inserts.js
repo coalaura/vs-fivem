@@ -116,8 +116,7 @@ async function _insert(text, select) {
 }
 
 async function insertNewEvent() {
-	const text = `RegisterNetEvent("event")
-AddEventHandler("event", function()
+	const text = `RegisterNetEvent('event', function()
 	local _source = source
 
 	-- TODO: implement
