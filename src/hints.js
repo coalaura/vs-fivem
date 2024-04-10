@@ -4,6 +4,7 @@ import { getPedConfigFlagName } from './data/ped-config-flags.js';
 import { getPedTaskName } from './data/ped-tasks.js';
 import { getPedMotionStateName } from './data/ped-motion-states.js';
 import { getVehicleModName } from './data/vehicle-mods.js';
+import { getVehicleWheelTypeName } from './data/vehicle-wheel-types.js';
 
 import { matchAll } from './helper/regexp.js';
 import { showInlineHints } from './helper/config.js';
@@ -71,7 +72,7 @@ function registerProviders() {
             return {
                 hint: state,
                 index: match.index + match[0].length
-            }
+            };
         })
     });
 
@@ -86,7 +87,22 @@ function registerProviders() {
             return {
                 hint: mod,
                 index: match.index + match[0].length
-            }
+            };
+        })
+    });
+
+    // SetVehicleWheelType
+    decorator.registerProvider(text => {
+        const matches = matchAll(/(?<=SetVehicleWheelType\s*\([^,]+?,\s*)\d+/g, text);
+
+        return matches.map(match => {
+            const id = parseInt(match[0]),
+                type = getVehicleWheelTypeName(id);
+
+            return {
+                hint: type,
+                index: match.index + match[0].length
+            };
         })
     });
 }
