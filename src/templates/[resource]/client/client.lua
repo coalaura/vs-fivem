@@ -1,4 +1,3 @@
-RegisterNetEvent("[resource]:doSomething")
-AddEventHandler("[resource]:doSomething", function()
+RegisterNetEvent('[resource]:client:doSomething', function()
 	print("Hello world!")
 end)
