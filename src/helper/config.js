@@ -12,6 +12,10 @@ export function showInlineHints() {
     return get('showInlineHints');
 }
 
+export function showPerformanceHints() {
+    return get('showPerformanceHints');
+}
+
 function get(key) {
     const config = vscode.workspace.getConfiguration('vs-fivem');
 

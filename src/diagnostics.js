@@ -9,12 +9,13 @@ import { extractAllFunctionCalls } from './helper/lua.js';
 import { getFileContext } from './helper/natives.js';
 import { onAnyDocumentChange } from './helper/listeners.js';
 import { parse } from './helper/luaparse.js';
-import { isLuaGLM } from './helper/config';
+import { isLuaGLM, showPerformanceHints } from './helper/config';
 import { getDefaultValueForBasicType, luaTypeToBasicType, detectBasicTypeFromValue, convertValueToBasicType } from './helper/types.js';
 
 import DiagnosticIndex from './classes/diagnostic-index.js';
 import Diagnostic from './classes/diagnostic.js';
 import Knowledge from './data/knowledge.js';
+import Performance from './data/performance.js';
 
 const index = new DiagnosticIndex();
 
@@ -107,6 +108,23 @@ export function refreshDiagnosticsNow(doc) {
 				severity = resolveSeverity(check.type);
 
 			diagnostics.push(new Diagnostic(call.range(doc), check.message, severity, replacement));
+		}
+	}
+
+	// Performance hints
+	if (showPerformanceHints()) {
+		for (const hint of Performance) {
+			const matches = matchAll(hint.bad.regex, text);
+
+			for (const match of matches) {
+				const start = doc.positionAt(match.index),
+					end = doc.positionAt(match.index + match[0].length),
+					range = new vscode.Range(start, end);
+
+				const message = `Use ${hint.good.code} instead of ${hint.bad.code} (${hint.bad.perf} -> ${hint.good.perf}).`;
+
+				diagnostics.push(new Diagnostic(range, message, vscode.DiagnosticSeverity.Hint, false));
+			}
 		}
 	}
 

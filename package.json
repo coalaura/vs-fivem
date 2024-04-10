@@ -57,6 +57,11 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Show inline hints (e.g. PedConfigFlag resolve, etc.)."
+				},
+				"vs-fivem.showPerformanceHints": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Show performance hints (e.g. `table[#table - 1]` instead of `table.insert`, etc.)."
 				}
 			}
 		},
