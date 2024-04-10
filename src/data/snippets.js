@@ -21,7 +21,7 @@ export default [
     },
     {
         prefix: 'event',
-        body: 'RegisterNetEvent("$0")\nAddEventHandler("$0", function()\nend)',
+        body: 'RegisterNetEvent(\'$0\', function()\nend)',
         description: 'Create a network event'
     },
     {
