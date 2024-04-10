@@ -2,6 +2,7 @@ import { relative, basename } from 'path';
 import vscode from 'vscode';
 
 import nativeIndex from './singletons/native-index.js';
+import definitionIndex from './singletons/definition-index.js';
 import { on } from './singletons/event-bus.js';
 import { matchAll } from './helper/regexp.js';
 import { extractAllFunctionCalls } from './helper/lua.js';
@@ -123,6 +124,22 @@ export function refreshDiagnosticsNow(doc) {
 				const message = `Use ${hint.good.code} instead of ${hint.bad.code} (${hint.bad.perf} -> ${hint.good.perf}).`;
 
 				diagnostics.push(new Diagnostic(range, message, vscode.DiagnosticSeverity.Hint, false));
+			}
+		}
+	}
+
+	// Accidentally overriding natives
+	const definitions = definitionIndex.get(doc.fileName);
+
+	if (definitions) {
+		for (const globalName in definitions.globals) {
+			if (nativeIndex.get(globalName, context)) {
+				const global = definitions.globals[globalName],
+					location = definitionIndex.toLocation(doc.fileName, global, true);
+
+				const replacement = `_G["${globalName}"] = function`;
+
+				diagnostics.push(new Diagnostic(location.range, `Implicitly overriding native \`${globalName}\`, you should explicitly override it instead, to avoid accidental overrides.`, vscode.DiagnosticSeverity.Warning, replacement));
 			}
 		}
 	}
