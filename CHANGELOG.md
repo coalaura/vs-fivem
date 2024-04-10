@@ -2,6 +2,7 @@
 
 ## [2.0.16]
 - Dropped (expensive) definitions support (except for events) in favor of [sumneko's lua language server](https://marketplace.visualstudio.com/items?itemName=sumneko.lua)
+- Fixed event definitions not properly working sometimes
 
 ## [2.0.15]
 - Added inline hints for ped motion states, vehicle mods and vehicle wheel types
