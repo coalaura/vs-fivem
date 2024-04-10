@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.0.15]
+- Added inline hints for ped motion states, vehicle mods and vehicle wheel types
+
 ## [2.0.14]
 - Updated the list of ped config flags
 - Added optional performance hints (can be toggled on in settings)
