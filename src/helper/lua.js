@@ -24,7 +24,7 @@ const NestedKeys = [
     'body'
 ];
 
-export function extractAllFunctionCalls(ast, code) {
+export function extractAllFunctionCalls(ast, code, whitelist = false) {
     if (!ast) return [];
 
     if (typeof ast === "string") {
@@ -40,7 +40,7 @@ export function extractAllFunctionCalls(ast, code) {
     try {
         const index = _index(code);
 
-        return _walk(ast, code, (line, column) => {
+        return _walk(ast, code, whitelist, (line, column) => {
             return index[line - 1] + column;
         }, []);
     } catch (e) {
@@ -50,7 +50,7 @@ export function extractAllFunctionCalls(ast, code) {
     return [];
 }
 
-function _walk(ast, code, index, functions = []) {
+function _walk(ast, code, whitelist, index, functions = []) {
     if (!ast) return functions;
 
     for (const key in ast) {
@@ -60,11 +60,15 @@ function _walk(ast, code, index, functions = []) {
             chunk = Array.isArray(value) ? value : [value];
 
         for (const item of chunk) {
-            _walk(item, code, index, functions);
+            _walk(item, code, whitelist, index, functions);
         }
     }
 
     if (ast.type === "CallExpression") {
+        const name = _identifierName(ast);
+
+        if (whitelist && !whitelist.includes(name)) return functions;
+
         const args = _resolveArguments(code, ast.arguments || [], index);
 
         const codeStart = index(ast.base.loc.start.line, ast.base.loc.start.column),
@@ -77,9 +81,13 @@ function _walk(ast, code, index, functions = []) {
             raw: codeRaw,
             rawArguments: rawArgs,
 
-            name: _identifierName(ast),
+            name: name,
             arguments: args,
 
+            position: {
+                line: ast.base.loc.start.line,
+                character: ast.base.loc.start.column
+            },
             range: _range(codeStart, codeEnd)
         });
     }

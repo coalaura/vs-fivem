@@ -1,70 +1,25 @@
 import vscode from 'vscode';
-import { existsSync } from 'fs';
-import { join } from 'path';
 
-import { matchAll } from '../helper/regexp.js';
 import { getFileContext } from '../helper/natives.js';
-import { searchEventUsages } from '../helper/config.js';
+import { extractAllFunctionCalls } from '../helper/lua.js';
 
-// Walk up the directory tree until we find a resource manifest file.
-function resolveResourceName(fileName) {
-    const base = fileName.split(/[\\\/]/);
-
-    while (base.length > 1) {
-        base.pop();
-
-        const manifest = join(base.join('/'), 'fxmanifest.lua'),
-            legacy = join(base.join('/'), '__resource.lua');
-
-        if (existsSync(manifest) || existsSync(legacy)) {
-            return base.pop();
-        }
-    }
-
-    return null;
-}
-
-function positionAt(text, index) {
-    const upToChar = text.substring(0, index);
-
-    const line = (upToChar.match(/\n/g) || []).length;
-
-    const lastNewlineIndex = upToChar.lastIndexOf('\n');
-
-    const character = index - lastNewlineIndex - 1;
-
-    return { line, character };
-}
+const eventRegisters = [
+    'RegisterNetEvent',
+    'RegisterServerEvent',
+    'RegisterClientEvent',
+    'AddEventHandler'
+];
 
 class DefinitionIndex {
     constructor() {
-        this.definitions = {};
         this.events = {
             client: {},
             server: {}
         };
-
-        this.resources = {};
-    }
-
-    clear() {
-        this.definitions = {};
-
-        this.resources = {};
-    }
-
-    get(name) {
-        return this.definitions[name];
     }
 
     delete(name) {
         const context = getFileContext(name);
-
-        delete this.definitions[name];
-
-        for (const resource in this.resources) {
-            delete this.resources[resource][name];
-        }
 
         if (context in this.events) {
             for (const eventName in this.events[context]) {
@@ -78,182 +33,91 @@ class DefinitionIndex {
     }
 
     rebuild(name, text) {
-        const resource = resolveResourceName(name),
-            context = getFileContext(name);
+        const context = getFileContext(name);
 
         this.delete(name);
 
-        const globals = {},
-            locals = {};
+        if (context !== 'client' && context !== 'server') return;
 
-        const definitions = matchAll(/((local )?function ([\w:.]+)) ?\(.*?\)(?=$| )/gm, text);
+        const calls = extractAllFunctionCalls(text, false, eventRegisters);
 
-        for (const definition of definitions) {
-            const prefix = definition[1],
-                local = definition[2] === 'local',
-                name = definition[3];
+        for (const call of calls) {
+            if (!call.arguments.length) continue;
 
-            const position = positionAt(text, definition.index);
+            const event = call.arguments[0].value.replace(/^['"]|['"]$/gm, ''),
+                position = call.position;
 
-            if (local) {
-                locals[name] = {
-                    line: position.line,
-                    character: position.character,
-                    length: definition[0].length,
-                    offset: prefix.length
-                };
-            } else {
-                globals[name] = {
-                    line: position.line,
-                    character: position.character,
-                    length: definition[0].length,
-                    offset: prefix.length
-                };
-            }
+            this.events[context][event] = {
+                file: name,
+                line: position.line,
+                character: position.character
+            };
         }
-
-        if (context === 'client' || context === 'server') {
-            const eventRegistrations = matchAll(/(Register(Net|Client|Server)(Event|Callback))\((["'])(.+?)\4/g, text);
-
-            for (const registration of eventRegistrations) {
-                const event = registration[5];
-
-                const position = positionAt(text, registration.index + registration[1].length + 1);
-
-                this.events[context][event] = {
-                    file: name,
-                    line: position.line,
-                    character: position.character,
-                    length: registration[0].length
-                };
-            }
-        }
-
-        this.definitions[name] = {
-            name: name,
-            context: context,
-            resource: resource,
-            globals: globals,
-            locals: locals
-        };
-
-        this.resources[resource] = this.resources[resource] || {};
-        this.resources[resource][name] = true;
     }
 
     resolveDefinition(document, position) {
-        // Local and global function definitions.
+        const wordRange = document.getWordRangeAtPosition(position, /(["'])(.+?)\1/),
+            word = wordRange ? document.getText(wordRange) : false;
+
+        if (!word) return null;
+
+        const context = getFileContext(document.fileName),
+            name = word.slice(1, -1);
+
+        let searchContext;
+
+        // Get context based on function name
         {
-            const wordRange = document.getWordRangeAtPosition(position, /[\w.:]+/),
-                word = wordRange ? document.getText(wordRange) : false;
+            const funcRange = document.getWordRangeAtPosition(wordRange.start, /[\w]+\(/),
+                func = funcRange ? document.getText(funcRange) : false;
 
-            if (word) {
-                // Don't resolve if we hovered over the base of a member access.
-                if (word.includes('.') || word.includes(':')) {
-                    const base = word.split(/\.|:/).shift();
+            if (func) {
+                const funcName = func.trim('(');
 
-                    const partRange = document.getWordRangeAtPosition(position, /[\w]+/),
-                        part = partRange ? document.getText(partRange) : false;
+                switch (funcName) {
+                    case 'TriggerServerEvent':
+                        searchContext = 'server';
 
-                    if (base === part) return null;
-                }
+                        break;
+                    case 'TriggerClientEvent':
+                        searchContext = 'client';
 
-                const name = document.fileName,
-                    resource = resolveResourceName(name),
-                    context = getFileContext(name);
+                        break;
+                    case 'TriggerEvent':
+                        searchContext = context;
 
-                // Is the function defined in this file?
-                if (name in this.definitions) {
-                    const definition = this.definitions[name],
-                        local = definition.locals[word],
-                        global = definition.globals[word];
-
-                    if (local && local.line < position.line) {
-                        return this.toLocation(name, local);
-                    } else if (global && global.line !== position.line) {
-                        return this.toLocation(name, global);
-                    }
-                }
-
-                // Is the function defined in another file in this resource?
-                if (!(resource in this.resources)) return null;
-
-                for (const file in this.resources[resource]) {
-                    if (file === name) continue;
-
-                    const def = this.definitions[file];
-
-                    if (!def || (def.context !== context && def.context !== 'shared')) continue;
-
-                    const global = def.globals[word];
-
-                    if (!global) continue;
-
-                    return this.toLocation(file, global);
+                        break;
                 }
             }
         }
 
-        // Event registrations.
-        {
-            const wordRange = document.getWordRangeAtPosition(position, /(["'])(.+?)\1/),
-                word = wordRange ? document.getText(wordRange) : false;
+        // Otherwise use inverse file context
+        if (!searchContext) {
+            searchContext = context === 'client' ? 'server' : 'client';
+        }
 
-            if (word) {
-                const name = word.slice(1, -1);
+        if (name in this.events[searchContext]) {
+            const event = this.events[searchContext][name];
 
-                // Don't resolve if we hovered over the base of a member access.
-                if (name.match(/[^\w]/)) {
-                    const last = name.split(/[^\w]+/).pop();
+            return this.toLocation(event.file, event);
+        }
 
-                    const partRange = document.getWordRangeAtPosition(position, /[\w]+/),
-                        part = partRange ? document.getText(partRange) : false;
+        // Triggering an event from the same context is valid, but a bit ugly.
+        if (name in this.events[context]) {
+            const event = this.events[context][name];
 
-                    if (last !== part) return null;
-                }
-
-                if (searchEventUsages()) {
-                    const before = document.getText(new vscode.Range(position.with(undefined, 0), wordRange.start)).replace(/\s+/g, '');
-
-                    // We clicked the definition of the event. Open a global search.
-                    if (before.match(/Register(Net|Server|Client)(Event|Callback)\($|AddEventHandler\($/m)) {
-                        vscode.commands.executeCommand('workbench.action.findInFiles', {
-                            query: name,
-                            triggerSearch: true
-                        });
-
-                        return null;
-                    }
-                }
-
-                const context = getFileContext(name),
-                    inverseContext = context === 'client' ? 'server' : 'client';
-
-                if (name in this.events[inverseContext]) {
-                    const event = this.events[inverseContext][name];
-
-                    return this.toLocation(event.file, event);
-                }
-
-                // Triggering an event from the same context is valid, but a bit ugly.
-                if (name in this.events[context]) {
-                    const event = this.events[context][name];
-
-                    return this.toLocation(event.file, event);
-                }
-            }
+            return this.toLocation(event.file, event);
         }
 
         return null;
     }
 
-    toLocation(fileName, func, excludeArguments = false) {
-        const file = vscode.Uri.file(fileName);
+    toLocation(fileName, event) {
+        const file = vscode.Uri.file(fileName),
+            start = new vscode.Position(event.line - 1, event.character),
+            end = new vscode.Position(start.line, start.character + 1);
 
-        const from = new vscode.Position(func.line, func.character),
-            to = new vscode.Position(func.line, from.character + (excludeArguments ? func.offset : func.length));
-
-        return new vscode.Location(file, new vscode.Range(from, to));
+        return new vscode.Location(file, new vscode.Range(start, end));
     }
 }
 

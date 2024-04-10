@@ -4,8 +4,8 @@ export function isLuaGLM() {
     return get('luaGLM');
 }
 
-export function searchEventUsages() {
-    return get('searchEventUsages');
+export function eventDefinitions() {
+    return get('eventDefinitions');
 }
 
 export function showInlineHints() {

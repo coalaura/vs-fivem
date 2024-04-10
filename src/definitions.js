@@ -1,11 +1,12 @@
 import vscode from 'vscode';
 
-import { readFileSync } from 'fs';
+import { readFile } from 'fs/promises';
 
+import { eventDefinitions } from './helper/config.js';
 import index from './singletons/definition-index.js';
 
 export function buildFullIndex() {
-    index.clear();
+    if (!eventDefinitions()) return;
 
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Window,
@@ -33,7 +34,7 @@ export function buildFullIndex() {
         }
 
         for (const file of files) {
-            const text = readFileSync(file.fsPath, 'utf8');
+            const text = await readFile(file.fsPath, 'utf8');
 
             index.rebuild(file.fsPath, text);
 

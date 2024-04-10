@@ -2,7 +2,7 @@
 	"name": "vs-fivem",
 	"displayName": "VS FiveM IntelliSense",
 	"description": "Adds highly detailed, in-depth, up-to-date fivem native support for lua to vs-code.",
-	"version": "2.0.15",
+	"version": "2.0.16",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
@@ -48,10 +48,10 @@
 					"default": true,
 					"markdownDescription": "Support and diagnose [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md) syntax like `+=`."
 				},
-				"vs-fivem.searchEventUsages": {
+				"vs-fivem.eventDefinitions": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Start a global search for an event when pressing ctrl while having it selected."
+					"markdownDescription": "Index event definitions and provide ctrl + click support."
 				},
 				"vs-fivem.showInlineHints": {
 					"type": "boolean",
