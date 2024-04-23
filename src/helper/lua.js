@@ -30,10 +30,14 @@ export function extractAllFunctionCalls(ast, code, whitelist = false) {
     if (typeof ast === "string") {
         code = ast;
 
-        ast = parse(code, {
-            locations: true,
-            ranges: true,
-        });
+        try {
+            ast = parse(code, {
+                locations: true,
+                ranges: true,
+            });
+        } catch (e) {
+            return [];
+        }
     }
 
     // Fail somewhat quietly
@@ -113,34 +117,39 @@ function _resolveArguments(code, args, index) {
 }
 
 function _identifierName(pIdentifier) {
-	if (pIdentifier) {
-		let base, identifier, index;
+    if (pIdentifier) {
+        let base, identifier, index, left, right
 
-		switch (pIdentifier.type) {
-			case "MemberExpression":
-				base = _identifierName(pIdentifier.base);
-				identifier = _identifierName(pIdentifier.identifier);
+        switch (pIdentifier.type) {
+            case "MemberExpression":
+                base = _identifierName(pIdentifier.base);
+                identifier = _identifierName(pIdentifier.identifier);
 
-				return (base ? base : "unknown") + pIdentifier.indexer + (identifier ? identifier : "unknown");
-			case "IndexExpression":
-				base = _identifierName(pIdentifier.base);
-				index = _identifierName(pIdentifier.index);
+                return (base ? base : "unknown") + pIdentifier.indexer + (identifier ? identifier : "unknown");
+            case "IndexExpression":
+                base = _identifierName(pIdentifier.base);
+                index = _identifierName(pIdentifier.index);
 
-				return (base ? base : "unknown") + "[" + (index ? index : "unknown") + "]";
-			case "Identifier":
-				return pIdentifier.name;
+                return (base ? base : "unknown") + "[" + (index ? index : "unknown") + "]";
+            case "Identifier":
+                return pIdentifier.name;
             case "CallExpression":
                 return _identifierName(pIdentifier.base);
-		}
+            case "BinaryExpression":
+                left = _identifierName(pIdentifier.left) || "unknown";
+                right = _identifierName(pIdentifier.right) || "unknown";
 
-		if (pIdentifier.raw) {
-			return pIdentifier.raw;
-		}
-	}
+                return `${left} ${pIdentifier.operator} ${right}`;
+        }
+
+        if (pIdentifier.raw) {
+            return pIdentifier.raw;
+        }
+    }
 
     console.log("Unknown identifier", pIdentifier);
 
-	return null;
+    return null;
 }
 
 function _index(code) {
