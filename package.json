@@ -2,7 +2,7 @@
 	"name": "vs-fivem",
 	"displayName": "VS FiveM IntelliSense",
 	"description": "Adds highly detailed, in-depth, up-to-date fivem native support for lua to vs-code.",
-	"version": "2.0.16",
+	"version": "2.0.17",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
@@ -47,6 +47,11 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Support and diagnose [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md) syntax like `+=`."
+				},
+				"vs-fivem.showSyntaxErrors": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Show LUA syntax errors as diagnostics. (Turn this off if you have a language server providing syntax errors.)"
 				},
 				"vs-fivem.eventDefinitions": {
 					"type": "boolean",

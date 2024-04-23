@@ -1,5 +1,9 @@
 # Change Log
 
+## [2.0.17]
+- Fix an error where diagnostics would not work a lot of the times
+- Made syntax error diagnostics optional (can be changed in the settings)
+
 ## [2.0.16]
 - Dropped (expensive) definitions support (except for events) in favor of [sumneko's lua language server](https://marketplace.visualstudio.com/items?itemName=sumneko.lua)
 - Fixed event definitions not properly working sometimes

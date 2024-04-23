@@ -16,6 +16,10 @@ export function showPerformanceHints() {
     return get('showPerformanceHints');
 }
 
+export function showSyntaxErrors() {
+    return get('showSyntaxErrors');
+}
+
 function get(key) {
     const config = vscode.workspace.getConfiguration('vs-fivem');
 

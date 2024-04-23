@@ -8,7 +8,7 @@ import { extractAllFunctionCalls } from './helper/lua.js';
 import { getFileContext } from './helper/natives.js';
 import { onAnyDocumentChange } from './helper/listeners.js';
 import { parse } from './helper/luaparse.js';
-import { isLuaGLM, showPerformanceHints } from './helper/config';
+import { isLuaGLM, showPerformanceHints, showSyntaxErrors } from './helper/config';
 import { getDefaultValueForBasicType, luaTypeToBasicType, detectBasicTypeFromValue, convertValueToBasicType } from './helper/types.js';
 
 import DiagnosticIndex from './classes/diagnostic-index.js';
@@ -55,7 +55,7 @@ export function refreshDiagnosticsNow(doc) {
             ranges: true,
         });
 	} catch (e) {
-		if (Number.isInteger(e.index)) {
+		if (Number.isInteger(e.index) && showSyntaxErrors()) {
 			const start = doc.positionAt(e.index),
 				end = doc.lineAt(start.line).range.end;
 
