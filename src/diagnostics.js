@@ -8,7 +8,7 @@ import { extractAllFunctionCalls } from './helper/lua.js';
 import { getFileContext } from './helper/natives.js';
 import { onAnyDocumentChange } from './helper/listeners.js';
 import { parse } from './helper/luaparse.js';
-import { isLuaGLM, showPerformanceHints, showSyntaxErrors } from './helper/config';
+import { isLuaGLM, showPerformanceHints, showSyntaxErrors, excludeFilesRegex } from './helper/config';
 import { getDefaultValueForBasicType, luaTypeToBasicType, detectBasicTypeFromValue, convertValueToBasicType } from './helper/types.js';
 
 import DiagnosticIndex from './classes/diagnostic-index.js';
@@ -42,6 +42,10 @@ export function refreshDiagnosticsNow(doc) {
 
 	// Not Lua? Not interested.
 	if (doc.languageId !== 'lua') return;
+
+	const excludeRgx = excludeFilesRegex();
+
+	if (excludeRgx && excludeRgx.test(doc.fileName)) return;
 
 	const text = doc.getText(),
 		diagnostics = [];

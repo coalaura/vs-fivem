@@ -67,6 +67,11 @@
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "Show performance hints (e.g. `table[#table - 1]` instead of `table.insert`, etc.)."
+				},
+				"vs-fivem.excludeFilesRegex": {
+					"type": "string",
+          			"default": "",
+					"markdownDescription": "A regex (case-insensitive) matching all files that should be excluded from linting/diagnostics."
 				}
 			}
 		},
