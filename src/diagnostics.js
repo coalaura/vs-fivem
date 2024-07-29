@@ -298,7 +298,9 @@ function lintFolder(folder) {
 				message: percentage + '% - ' + basename(doc.fileName) + '...'
 			});
 
-			issues += refreshDiagnosticsNow(doc);
+			const foundIssues = refreshDiagnosticsNow(doc);
+
+			if (foundIssues) issues += foundIssues;
 		}
 
 		if (issues === 0) {
