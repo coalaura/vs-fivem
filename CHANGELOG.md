@@ -1,5 +1,11 @@
 # Change Log
 
+## [2.0.18]
+- Add joaat reverse command and context action
+- Added inline hints for `DisableControlAction` and `EnableControlAction`
+- Fixed diagnostic notification showing NaN at times
+- Added a `excludeFilesRegex` config option
+
 ## [2.0.17]
 - Fix an error where diagnostics would not work a lot of the times
 - Made syntax error diagnostics optional (can be changed in the settings)
