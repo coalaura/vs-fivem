@@ -10,6 +10,15 @@ export function applyNativeOverrides(native) {
             native.parameters[22].type = 'boolean';
 
             break;
+        case 'SetTrailerLegsLowered':
+            native.parameters = [
+                {
+                    name: 'trailer',
+                    type: 'vehicle'
+                }
+            ];
+
+            break;
     }
 
     return native;
