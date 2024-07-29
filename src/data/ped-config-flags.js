@@ -458,7 +458,7 @@ const PedConfigFlags = [
 	{id: 456, name: "CPED_CONFIG_FLAG_CanBeIncapacitated"},
 	{id: 457, name: "CPED_CONFIG_FLAG_ForcedAimFromArrest"},
 	{id: 458, name: "CPED_CONFIG_FLAG_DontChangeTargetFromMelee"},
-	{id: 459, name: "_0x4376ABF2"},
+	{id: 459, name: "CPED_CONFIG_FLAG_DisableHealthRegenerationWhenStunned"},
 	{id: 460, name: "CPED_CONFIG_FLAG_RagdollFloatsIndefinitely"},
 	{id: 461, name: "CPED_CONFIG_FLAG_BlockElectricWeaponDamage"},
 	{id: 462, name: "_0x262A3B8E"},
