@@ -107,6 +107,10 @@
 			{
 				"command": "vs-fivem.convertJSON",
 				"title": "Convert JSON to Lua"
+			},
+			{
+				"command": "vs-fivem.reverseJoaat",
+				"title": "Reverse JOAAT hash"
 			}
 		],
 		"menus": {
@@ -136,6 +140,11 @@
 				{
 					"when": "editorLangId == lua",
 					"command": "vs-fivem.createEnsureThread",
+					"group": "2_modification"
+				},
+				{
+					"when": "editorLangId == lua && editorHasSelection",
+					"command": "vs-fivem.reverseJoaat",
 					"group": "2_modification"
 				},
 				{

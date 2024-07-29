@@ -10,6 +10,7 @@ import { registerContextInserts } from './context-inserts.js';
 import { registerWebViewProvider } from './webview.js';
 import { registerDefinitionProvider } from './definitions.js';
 import { registerJSONCommands } from './json.js';
+import { registerJOAATCommands } from './joaat.js';
 
 let activated = false;
 
@@ -37,6 +38,7 @@ export function activate(context) {
 	registerWebViewProvider(context);
 	registerDefinitionProvider(context);
 	registerJSONCommands(context);
+	registerJOAATCommands(context);
 }
 
 // This method is called when your extension is deactivated
