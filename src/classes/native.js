@@ -12,6 +12,7 @@ export default class Native {
         this.description = json.description ? json.description.trim().replace(/(?<=]\()#/g, 'https://docs.fivem.net/natives/?') : null;
 
         this.name = json.name ? createNativeLuaName(json.name) : json.hash;
+        this.cname = json.name || json.hash;
 
         const { parameters, returns } = resolveParametersAndReturns(this.name, json);
 

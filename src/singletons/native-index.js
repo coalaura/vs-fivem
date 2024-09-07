@@ -35,7 +35,17 @@ class NativeIndex {
 
         // Add hash to index
         if (native.name !== native.hash) {
-            this.hashes['N_' + native.hash.toUpperCase()] = native.name;
+            if (native.hash.startsWith("N_0x")) {
+                this.hashes[parseInt(native.hash.slice(2), 16)] = {
+                    c: native.cname,
+                    lua: native.name
+                };
+            } else if (native.hash.startsWith("0x")) {
+                this.hashes[parseInt(native.hash, 16)] = {
+                    c: native.cname,
+                    lua: native.name
+                };
+            }
         }
     }
 
@@ -83,10 +93,18 @@ class NativeIndex {
         return this.aliases[name];
     }
 
-    getNameFromHash(hash) {
-        hash = hash.toUpperCase();
+    getNameFromHash(hash, useCName = false) {
+        if (hash.startsWith("N_0x")) {
+            hash = parseInt(hash.slice(2), 16);
+        } else if (hash.startsWith("0x")) {
+            hash = parseInt(hash, 16);
+        } else {
+            return null;
+        }
 
-        return this.hashes[hash];
+        const name = this.hashes[hash];
+
+        return name ? (useCName ? name.c : name.lua) : null;
     }
 }
 

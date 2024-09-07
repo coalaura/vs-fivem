@@ -6,6 +6,7 @@ import { getPedMotionStateName } from './data/ped-motion-states.js';
 import { getVehicleModName } from './data/vehicle-mods.js';
 import { getVehicleWheelTypeName } from './data/vehicle-wheel-types.js';
 import { getControlIdName } from './data/controls.js';
+import { getNativeNameFromOffset } from './data/native-names.js';
 
 import { matchAll } from './helper/regexp.js';
 import { showInlineHints } from './helper/config.js';
@@ -109,7 +110,7 @@ function registerProviders() {
 
     // DisableControlAction & EnableControlAction
     decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=(Dis|En)ableControlAction\(\d, )\d+/g, text);
+        const matches = matchAll(/(?<=((Dis|En)ableControlAction|[SG]etControlNormal|Is(Disabled)?Control(Active|(Just)?(Pressed|Released)))\(\d, )\d+/g, text);
 
         return matches.map(match => {
             const id = parseInt(match[0]),
@@ -117,6 +118,21 @@ function registerProviders() {
 
             return {
                 hint: control,
+                index: match.index + match[0].length
+            };
+        }).filter(match => match.hint);
+    });
+
+    // Citizen.InvokeNative & N_
+    decorator.registerProvider(text => {
+        const matches = matchAll(/(?<=(InvokeNative|N_)\()0x[a-f0-9]+/gi, text);
+
+        return matches.map(match => {
+            const offset = match[0],
+                name = getNativeNameFromOffset(offset);
+
+            return {
+                hint: name,
                 index: match.index + match[0].length
             };
         }).filter(match => match.hint);
