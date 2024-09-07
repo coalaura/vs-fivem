@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.1.0]
+- Improved logo and nav icon.
+
 ## [2.0.19]
 - Added more hints to control natives.
 - Added hints for `InvokeNative` if the offset is known.
