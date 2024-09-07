@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.1.1]
+- Fixed theme color being incorrect.
+
 ## [2.1.0]
 - Improved logo and nav icon.
 
