@@ -1,6 +1,6 @@
 # VS FiveM IntelliSense
 
-This extension adds FiveM native support, code-completions, diagnostics and helpful commands for lua files.
+This extension adds FiveM native support, code-completions, diagnostics and helpful commands for lua files. If you like the extension or find it useful, please consider giving it a star on [GitHub](https://github.com/coalaura/vs-fivem) or leaving a [review on the VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=coalaura.vs-fivem&ssr=false#review-details)!
 
 I recommend also getting [sumneko's lua language server](https://marketplace.visualstudio.com/items?itemName=sumneko.lua) for reference finding, lua auto-completion and more helpful features. To not interfere with this extension i'd also turn off `Lua.diagnostics.enable`, `Lua.semantic.variable` and increasing `Lua.workspace.preloadFileSize` if necessary.
 
