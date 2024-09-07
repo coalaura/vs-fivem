@@ -1,5 +1,10 @@
 # Change Log
 
+## [2.0.19]
+- Added more hints to control natives.
+- Added hints for `InvokeNative` if the offset is known.
+- Added more ped motion state hashes.
+
 ## [2.0.18]
 - Add joaat reverse command and context action
 - Added inline hints for `DisableControlAction` and `EnableControlAction`
