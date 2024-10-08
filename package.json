@@ -70,7 +70,7 @@
 				},
 				"vs-fivem.excludeFilesRegex": {
 					"type": "string",
-          			"default": "",
+					"default": "",
 					"markdownDescription": "A regex (case-insensitive) matching all files that should be excluded from linting/diagnostics."
 				}
 			}
@@ -195,6 +195,7 @@
 		"@coalaura/luaparse-glm": "^1.0.6",
 		"luaparse": "^0.3.1",
 		"marked": "^4.3.0",
-		"node-fetch": "^2.6.6"
+		"node-fetch": "^2.6.6",
+		"vsce": "^2.15.0"
 	}
 }
