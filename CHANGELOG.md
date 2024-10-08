@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.1.2]
+- Added even more hints for various natives.
+
 ## [2.1.1]
 - Fixed theme color being incorrect.
 

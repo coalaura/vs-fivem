@@ -7,6 +7,12 @@ import { getVehicleModName } from './data/vehicle-mods.js';
 import { getVehicleWheelTypeName } from './data/vehicle-wheel-types.js';
 import { getControlIdName } from './data/controls.js';
 import { getNativeNameFromOffset } from './data/native-names.js';
+import { getVehicleTaskFlags } from './data/vehicle-task-flags.js';
+import { getForceTypeName } from './data/force-types.js';
+import { getVehicleNodeFlags } from './data/node-flags.js';
+import { getExplosionTypeName } from './data/eplosion-types.js';
+import { getScriptGfxDrawOrderName } from './data/draw-orders.js';
+import { getTextFontName } from './data/text-fonts.js';
 
 import { matchAll } from './helper/regexp.js';
 import { showInlineHints } from './helper/config.js';
@@ -130,6 +136,96 @@ function registerProviders() {
         return matches.map(match => {
             const offset = match[0],
                 name = getNativeNameFromOffset(offset);
+
+            return {
+                hint: name,
+                index: match.index + match[0].length
+            };
+        }).filter(match => match.hint);
+    });
+
+    // TaskLeaveVehicle & TaskLeaveAnyVehicle & TaskEnterVehicle
+    decorator.registerProvider(text => {
+        const matches = matchAll(/(?<=Task(Leave(Any)?)Vehicle\(([^,]+,\s*){2}|TaskEnterVehicle\(([^,]+,\s*){5})\d+/gi, text);
+
+        return matches.map(match => {
+            const flags = parseInt(match[0]),
+                names = getVehicleTaskFlags(flags);
+
+            return {
+                hint: names.join(" | "),
+                index: match.index + match[0].length
+            };
+        }).filter(match => match.hint);
+    });
+
+    // ApplyForceToEntity & ApplyForceToEntityCenterOfMass
+    decorator.registerProvider(text => {
+        const matches = matchAll(/(?<=ApplyForceToEntity(CenterOfMass)?\(([^,]+,\s*))\d+/gi, text);
+
+        return matches.map(match => {
+            const type = parseInt(match[0]),
+                name = getForceTypeName(type);
+
+            return {
+                hint: name,
+                index: match.index + match[0].length
+            };
+        }).filter(match => match.hint);
+    });
+
+    // Get...VehicleNode...
+    decorator.registerProvider(text => {
+        const matches = matchAll(/(?<=GetClosestVehicleNode(Id)?(WithHeading)?\(([^,]+,\s*){3}|GetNthClosestVehicleNode(Id)?(FavourDirection|WithHeading)?\(([^,]+,\s*){4}|GetNthClosestVehicleNodeFavourDirection\(([^,]+,\s*){7})\d+/gi, text);
+
+        return matches.map(match => {
+            const flags = parseInt(match[0]),
+                names = getVehicleNodeFlags(flags);
+
+            return {
+                hint: names.join(" | "),
+                index: match.index + match[0].length
+            };
+        }).filter(match => match.hint);
+    });
+
+    // AddExplosion
+    decorator.registerProvider(text => {
+        const matches = matchAll(/(?<=AddExplosion\(([^,]+,\s*){3})\d+/gi, text);
+
+        return matches.map(match => {
+            const type = parseInt(match[0]),
+                name = getExplosionTypeName(type);
+
+            return {
+                hint: name,
+                index: match.index + match[0].length
+            };
+        }).filter(match => match.hint);
+    });
+
+    // SetScriptGfxDrawOrder
+    decorator.registerProvider(text => {
+        const matches = matchAll(/(?<=SetScriptGfxDrawOrder\()\d+/gi, text);
+
+        return matches.map(match => {
+            const type = parseInt(match[0]),
+                name = getScriptGfxDrawOrderName(type);
+
+            return {
+                hint: name,
+                index: match.index + match[0].length
+            };
+        }).filter(match => match.hint);
+    });
+
+    // SetTextFont
+    decorator.registerProvider(text => {
+        const matches = matchAll(/(?<=SetTextFont\()\d+/gi, text);
+
+        return matches.map(match => {
+            const type = parseInt(match[0]),
+                name = getTextFontName(type);
 
             return {
                 hint: name,
