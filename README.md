@@ -4,29 +4,6 @@ This extension adds FiveM native support, code-completions, diagnostics and help
 
 I recommend also getting [sumneko's lua language server](https://marketplace.visualstudio.com/items?itemName=sumneko.lua) for reference finding, lua auto-completion and more helpful features. To not interfere with this extension i'd also turn off `Lua.diagnostics.enable`, `Lua.semantic.variable` and increasing `Lua.workspace.preloadFileSize` if necessary.
 
-### Support for most of FiveM's [lua-glm](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md) extensions
-```lua
--- Support +=, -=, *=, /=, <<=, >>=, &=, |=, and ^= operators
-test += 123
-
--- Same as: local a, b, c = t.a, t.b, t.c
-local a, b, c in t
-
--- Safe Navigation
-local a = t?.a?.b?.c
-
--- GLSL style vector swizzling
-local a = t.xyz
-
--- C-Style Comments
-/* This is a comment */
-
--- Compile Time Jenkins' Hashes
-`Hello, World!` -- 1395890823
-```
-
-![glm](.github/glm.png)
-
 ### Detailed native documentation
 Natives are automatically updated from the FiveM documentation.
 
