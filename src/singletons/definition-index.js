@@ -1,57 +1,131 @@
 import vscode from 'vscode';
+import { join } from 'path';
+import { existsSync, readFileSync, writeFileSync, statSync, mkdirSync } from 'fs';
 
 import { getFileContext } from '../helper/natives.js';
-import { extractAllFunctionCalls } from '../helper/lua.js';
-
-const eventRegisters = [
-    'RegisterNetEvent',
-    'RegisterServerEvent',
-    'RegisterClientEvent',
-    'AddEventHandler'
-];
+import { matchAll } from '../helper/regexp.js';
+import logger from './logger.js';
 
 class DefinitionIndex {
-    constructor() {
+    constructor(context) {
+        this.version = 1;
+
+        this.directory = context.storagePath;
+        this.path = join(this.directory, 'events.json');
+
+        this.files = {};
         this.events = {
             client: {},
             server: {}
         };
     }
 
-    delete(name) {
-        const context = getFileContext(name);
+    load() {
+        if (!existsSync(this.path)) {
+            return;
+        }
+
+        const contents = readFileSync(this.path, 'utf8');
+
+        try {
+            const data = JSON.parse(contents);
+
+            if (data.version !== this.version) {
+                return;
+            }
+
+            this.files = data.files;
+            this.events = data.events;
+
+            for (const path in this.files) {
+                if (!existsSync(path)) {
+                    this.delete(path);
+                }
+            }
+
+            logger.log('Definition index loaded from disk.');
+        } catch { }
+    }
+
+    store() {
+        if (!existsSync(this.directory)) {
+            mkdirSync(this.directory, { recursive: true });
+        }
+
+        writeFileSync(this.path, JSON.stringify({
+            version: this.version,
+            files: this.files,
+            events: this.events
+        }));
+    }
+
+    mtime(path) {
+        try {
+            const stat = statSync(path);
+
+            if (!stat) return 0;
+
+            return stat.mtime.getTime();
+        } catch {
+            return 0;
+        }
+    }
+
+    delete(path) {
+        const context = getFileContext(path);
+
+        delete this.files[path];
 
         if (context in this.events) {
             for (const eventName in this.events[context]) {
                 const event = this.events[context][eventName];
 
-                if (event.file === name) {
+                if (event.file === path) {
                     delete this.events[context][event];
                 }
             }
         }
     }
 
-    rebuild(name, text) {
-        const context = getFileContext(name);
+    rebuild(path, persist = false) {
+        const indexed = this.files[path],
+            mtime = this.mtime(path);
 
-        this.delete(name);
+        if (indexed === mtime) {
+            return;
+        }
 
-        if (context !== 'client' && context !== 'server') return;
+        const context = getFileContext(path);
 
-        const calls = extractAllFunctionCalls(text, false, eventRegisters);
+        this.delete(path);
 
-        for (const call of calls) {
-            if (!call.arguments.length) continue;
+        if (context !== 'client' && context !== 'server' || !existsSync(path)) return;
 
-            const event = call.arguments[0].value.replace(/^['"]|['"]$/gm, ''),
-                position = call.position;
+        const text = readFileSync(path, 'utf8');
 
-            this.events[context][event] = {
-                file: name,
-                line: position.line,
-                character: position.character
-            };
+        if (!text) return;
+
+        const lines = text.split(/\r?\n/);
+
+        for (let line = 0; line < lines.length; line++) {
+            const lineText = lines[line];
+
+            for (const match of lineText.matchAll(/(?:Register(?:Net|Client|Server)Event|AddEventHandler)\((["'])(.+?)\1/g)) {
+                const column = match.index,
+                    event = match[2];
+
+                this.events[context][event] = {
+                    file: path,
+                    line: line + 1,
+                    column: column
+                };
+            }
+        }
+
+        if (persist) {
+            this.files[path] = mtime;
+
+            this.store();
         }
     }
 
@@ -114,13 +188,21 @@ class DefinitionIndex {
 
     toLocation(fileName, event) {
         const file = vscode.Uri.file(fileName),
-            start = new vscode.Position(event.line - 1, event.character),
-            end = new vscode.Position(start.line, start.character + 1);
+            start = new vscode.Position(event.line - 1, event.column),
+            end = new vscode.Position(event.line - 1, event.column + 1);
 
         return new vscode.Location(file, new vscode.Range(start, end));
     }
 }
 
-const index = new DefinitionIndex();
+let index;
 
-export default index;
+export function getIndex() {
+    return index;
+}
+
+export function initializeEventIndex(context) {
+    index = new DefinitionIndex(context);
+
+    index.load();
+}

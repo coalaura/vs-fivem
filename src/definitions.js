@@ -3,7 +3,10 @@ import vscode from 'vscode';
 import { readFile } from 'fs/promises';
 
 import { eventDefinitions } from './helper/config.js';
-import index from './singletons/definition-index.js';
+import { getIndex } from './singletons/definition-index.js';
+import { clear } from 'console';
+
+let timeouts = {};
 
 export function buildFullIndex() {
     if (!eventDefinitions()) return;
@@ -18,7 +21,7 @@ export function buildFullIndex() {
             increment: 0
         });
 
-        const files = await vscode.workspace.findFiles('**/*.lua', '**/node_modules/**'),
+        const files = await vscode.workspace.findFiles('**/*.lua', '**/{node_modules,.git}/**'),
             batch = Math.ceil(files.length / 20);
 
         let indexed = -1;
@@ -36,22 +39,36 @@ export function buildFullIndex() {
             }
         }
 
-        for (const file of files) {
-            const text = await readFile(file.fsPath, 'utf8');
+        const index = getIndex();
 
-            index.rebuild(file.fsPath, text);
+        for (const file of files) {
+            index.rebuild(file.fsPath, false);
 
             report();
         }
+
+        index.store();
 
         progress.report({ increment: 100 });
     });
 }
 
+function debounceIndexRebuild(path) {
+    clearTimeout(timeouts[path]);
+
+    timeouts[path] = setTimeout(() => {
+        const index = getIndex();
+
+        index?.rebuild(path, true);
+    }, 500);
+}
+
 export function registerDefinitionProvider(context) {
     vscode.languages.registerDefinitionProvider('lua', {
         provideDefinition(document, position) {
-            return index.resolveDefinition(document, position);
+            const index = getIndex();
+
+            return index?.resolveDefinition(document, position);
         }
     }, null, context.subscriptions);
 
@@ -60,12 +77,16 @@ export function registerDefinitionProvider(context) {
 
         if (!document || document.isUntitled) return;
 
-        index.rebuild(document.fileName, document.getText());
+        debounceIndexRebuild(document.fileName);
     }, null, context.subscriptions);
 
     vscode.workspace.onDidDeleteFiles(event => {
         for (const file of event.files) {
-            index.delete(file.fsPath);
+            clearTimeout(timeouts[file.fsPath]);
+
+            const index = getIndex();
+
+            index?.delete(file.fsPath);
         }
     }, null, context.subscriptions);
 }

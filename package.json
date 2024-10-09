@@ -2,7 +2,7 @@
 	"name": "vs-fivem",
 	"displayName": "VS FiveM IntelliSense",
 	"description": "Adds highly detailed, in-depth, up-to-date fivem native support for lua to vs-code.",
-	"version": "2.1.4",
+	"version": "3.0.0",
 	"author": "coalaura",
 	"publisher": "coalaura",
 	"icon": "logo.png",
@@ -43,11 +43,6 @@
 		"configuration": {
 			"title": "VS-FiveM",
 			"properties": {
-				"vs-fivem.luaGLM": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "Support and diagnose [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md) syntax like `+=`."
-				},
 				"vs-fivem.showSyntaxErrors": {
 					"type": "boolean",
 					"default": true,
@@ -62,11 +57,6 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Show inline hints (e.g. PedConfigFlag resolve, etc.)."
-				},
-				"vs-fivem.showPerformanceHints": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Show performance hints (e.g. `table[#table - 1]` instead of `table.insert`, etc.)."
 				},
 				"vs-fivem.excludeFilesRegex": {
 					"type": "string",
@@ -184,18 +174,18 @@
 		"@types/mocha": "^10.0.1",
 		"@types/node": "16.x",
 		"@types/vscode": "^1.77.0",
+		"axios": "^1.7.7",
 		"esbuild": "^0.19.5",
 		"esbuild-copy-static-files": "^0.1.0",
 		"eslint": "^8.36.0",
 		"glob": "^8.1.0",
+		"luaparse": "^0.3.1",
 		"mocha": "^10.2.0",
 		"typescript": "^4.9.5"
 	},
 	"dependencies": {
-		"@coalaura/luaparse-glm": "^1.0.6",
-		"luaparse": "^0.3.1",
+		"antlr4": "^4.13.2",
 		"marked": "^4.3.0",
-		"node-fetch": "^2.6.6",
 		"vsce": "^2.15.0"
 	}
 }

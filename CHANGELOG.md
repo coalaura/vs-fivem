@@ -1,5 +1,14 @@
 # Change Log
 
+## [3.0.0]
+- Rewrote most of the codebase.
+- Major performance improvements.
+- Caching of indexes.
+- Only fetching natives once a day.
+- Fixed various issues with decorators and diagnostics.
+- Removed some unnecessary settings.
+- Improved the hints and event-definition providers (**MUCH** faster).
+
 ## [2.1.4]
 - Debounced the hints provider to improve performance.
 

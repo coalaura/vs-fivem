@@ -1,4 +1,4 @@
-import nativeIndex from '../singletons/native-index.js';
+import { getIndex } from '../singletons/native-index.js';
 
 const NamedNatives = {
     0x108be26959a9da00: "UI3DSCENE_MAKE_PUSHED_PRESET_PERSISTENT",
@@ -423,7 +423,7 @@ export function getNativeNameFromOffset(offset) {
 
     if (hex in NamedNatives) return NamedNatives[hex];
 
-    const native = nativeIndex.getNameFromHash(offset, true);
+    const native = getIndex().getNameFromHash(offset, true);
 
     return native || false;
 }

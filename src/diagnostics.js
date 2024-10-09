@@ -1,20 +1,19 @@
 import { relative, basename } from 'path';
 import vscode from 'vscode';
 
-import nativeIndex from './singletons/native-index.js';
+import { getIndex } from './singletons/native-index.js';
 import { on } from './singletons/event-bus.js';
 import { matchAll } from './helper/regexp.js';
-import { extractAllFunctionCalls } from './helper/lua.js';
 import { getFileContext } from './helper/natives.js';
 import { onAnyDocumentChange } from './helper/listeners.js';
-import { parse } from './helper/luaparse.js';
-import { isLuaGLM, showPerformanceHints, showSyntaxErrors, excludeFilesRegex } from './helper/config';
+import { parse, visitFunctions } from './parser.js';
+import { showSyntaxErrors, excludeFilesRegex } from './helper/config';
 import { getDefaultValueForBasicType, luaTypeToBasicType, detectBasicTypeFromValue, convertValueToBasicType } from './helper/types.js';
+import logger from './singletons/logger.js';
 
 import DiagnosticIndex from './classes/diagnostic-index.js';
 import Diagnostic from './classes/diagnostic.js';
 import Knowledge from './data/knowledge.js';
-import Performance from './data/performance.js';
 
 const index = new DiagnosticIndex();
 
@@ -47,196 +46,96 @@ export function refreshDiagnosticsNow(doc) {
 
 	if (excludeRgx && excludeRgx.test(doc.fileName)) return;
 
+	const started = Date.now();
+
 	const text = doc.getText(),
 		diagnostics = [];
 
-	// Syntax errors
-	let ast;
+	const { tree, error } = parse(text);
 
-	try {
-		ast = parse(text, {
-            locations: true,
-            ranges: true,
-        });
-	} catch (e) {
-		if (Number.isInteger(e.index) && showSyntaxErrors()) {
-			const start = doc.positionAt(e.index),
-				end = doc.lineAt(start.line).range.end;
+	if (error) {
+		if (showSyntaxErrors()) {
+			const { column, line, message } = error;
 
-			const range = new vscode.Range(start, end);
-
-			const message = e.message.replace(/^\[\d+:\d+]/, '');
+			const start = new vscode.Position(line - 1, column),
+				end = doc.lineAt(line).range.end,
+				range = new vscode.Range(start, end);
 
 			diagnostics.push(new Diagnostic(range, message, vscode.DiagnosticSeverity.Error, false));
 		}
-	}
+	} else {
+		const context = getFileContext(doc.fileName);
 
-	const context = getFileContext(doc.fileName),
-		calls = extractAllFunctionCalls(ast, text);
+		visitFunctions(tree, (name, args, location) => {
+			const index = getIndex();
 
-	// General knowledge
-	for (const check of Knowledge) {
-		if (check.lua_glm && !isLuaGLM()) continue;
+			const range = () => {
+				return new vscode.Range(
+					new vscode.Position(location.start.line - 1, location.start.column),
+					new vscode.Position(location.end.line - 1, location.end.column)
+				);
+			};
 
-		const regex = check.regex;
+			// General knowledge
+			const check = Knowledge[name] || false;
 
-		// Regex search
-		if (regex) {
-			const matches = matchAll(regex, text);
+			if (check && (!check.match || check.match(args))) {
+				const severity = resolveSeverity(check.type);
 
-			for (const match of matches) {
-				const start = doc.positionAt(match.index),
-					end = doc.positionAt(match.index + match[0].length),
-					range = new vscode.Range(start, end);
+				diagnostics.push(new Diagnostic(range(), check.message, severity, check.replace));
 
-				const replacement = text.substring(match.index, match.index + match[0].length).replace(regex, check.replace),
-					severity = resolveSeverity(check.type);
-
-				diagnostics.push(new Diagnostic(range, check.message, severity, replacement));
+				return;
 			}
 
-			continue;
-		}
+			// Native aliases & hashes
+			const hash = index.getNameFromHash(name);
 
-		// Function search
-		const name = check.func,
-			argumentRegex = check.argumentRegex;
+			if (hash) {
+				diagnostics.push(new Diagnostic(range(), `\`${name}\` is named, use \`${hash}\` instead.`, vscode.DiagnosticSeverity.Warning, hash));
 
-		const matchingCalls = calls.filter(call => {
-			return call.name === name && (!argumentRegex || call.rawArguments.match(argumentRegex));
-		});
-
-		for (const call of matchingCalls) {
-			const replacement = check.replace ? check.replace.replace(/\$0/g, call.rawArguments) : false,
-				severity = resolveSeverity(check.type);
-
-			diagnostics.push(new Diagnostic(call.range(doc), check.message, severity, replacement));
-		}
-	}
-
-	// Performance hints
-	if (showPerformanceHints()) {
-		for (const hint of Performance) {
-			const matches = matchAll(hint.bad.regex, text);
-
-			for (const match of matches) {
-				const start = doc.positionAt(match.index),
-					end = doc.positionAt(match.index + match[0].length),
-					range = new vscode.Range(start, end);
-
-				const message = `Use ${hint.good.code} instead of ${hint.bad.code} (${hint.bad.perf} -> ${hint.good.perf}).`;
-
-				diagnostics.push(new Diagnostic(range, message, vscode.DiagnosticSeverity.Hint, false));
+				return;
 			}
-		}
-	}
 
-	// Native aliases & hashes
-	for (const call of calls) {
-		const hash = nativeIndex.getNameFromHash(call.name);
+			const alias = index.getNameFromAlias(name);
 
-		if (hash) {
-			const replacement = hash + '(' + call.rawArguments + ')';
+			if (alias) {
+				diagnostics.push(new Diagnostic(range(), `\`${name}\` is deprecated, use \`${alias}\` instead.`, vscode.DiagnosticSeverity.Warning, alias));
 
-			diagnostics.push(new Diagnostic(call.range(doc), `\`${call.name}\` is named, use \`${hash}\` instead.`, vscode.DiagnosticSeverity.Warning, replacement));
+				return;
+			}
 
-			continue;
-		}
+			// Native checks
+			const native = index.get(name, context);
 
-		const alias = nativeIndex.getNameFromAlias(call.name);
+			if (native) {
+				const expected = native.parameters.length,
+					actual = args.length;
 
-		if (alias) {
-			const replacement = alias + '(' + call.rawArguments + ')';
+				// Wrong number of arguments
+				if (expected !== actual) {
+					diagnostics.push(new Diagnostic(range(), `${native.name} expects ${expected} arguments instead of ${actual}.`, vscode.DiagnosticSeverity.Warning));
 
-			diagnostics.push(new Diagnostic(call.range(doc), `\`${call.name}\` is deprecated, use \`${alias}\` instead.`, vscode.DiagnosticSeverity.Warning, replacement));
-		}
-	}
+					return;
+				}
 
-	// Native checks
-	for (const call of calls) {
-		const native = nativeIndex.get(call.name, context);
-
-		if (!native) {
-			continue;
-		}
-
-		const callArguments = call.arguments,
-			argLength = callArguments.length,
-			paramLength = native.parameters.length;
-
-		// Wrong number of arguments
-		if (argLength !== paramLength) {
-			// If we have less arguments than parameters, we can add the default values
-			if (argLength < paramLength) {
-				while (callArguments.length < paramLength) {
-					const param = native.parameters[callArguments.length],
+				// Wrong argument types
+				for (let i = 0; i < expected; i++) {
+					const param = native.parameters[i],
 						basicType = luaTypeToBasicType(param.type);
 
-					callArguments.push({
-						value: getDefaultValueForBasicType(basicType)
-					});
+					const arg = args[i];
+
+					if (arg.type !== 'any' && arg.type !== basicType) {
+						diagnostics.push(new Diagnostic(range(), `${native.name} expects ${basicType} instead of ${arg.type}.`, vscode.DiagnosticSeverity.Warning));
+					}
 				}
 			}
-
-			const replacement = `${call.name}(${callArguments.slice(0, paramLength).map(argument => argument.value).join(', ')})`;
-
-			diagnostics.push(new Diagnostic(call.range(doc), `${native.name} expects ${paramLength} arguments instead of ${argLength}.`, vscode.DiagnosticSeverity.Warning, replacement));
-
-			continue;
-		}
-
-		// Wrong argument types
-		for (const [index, argument] of callArguments.entries()) {
-			const param = native.parameters[index],
-				paramType = luaTypeToBasicType(param.type),
-				argType = detectBasicTypeFromValue(argument.value);
-
-			if (paramType !== 'any' && argType !== 'any' && paramType !== argType) {
-				const replacement = convertValueToBasicType(paramType, argument.value);
-
-				diagnostics.push(new Diagnostic(argument.range(doc), `${native.name} expects ${param.type} for parameter ${index + 1}.`, vscode.DiagnosticSeverity.Warning, replacement));
-			}
-		}
-	}
-
-	// Trailing whitespace
-	{
-		const matches = matchAll(/[ \t]+$/gm);
-
-		for (const match of matches) {
-			const start = doc.positionAt(match.index),
-				end = doc.positionAt(match.index + match[0].length);
-
-			const range = new vscode.Range(start, end);
-
-			diagnostics.push(new Diagnostic(range, 'Trailing whitespace', vscode.DiagnosticSeverity.Warning, ''));
-		}
-	}
-
-	// 3 or more newlines
-	{
-		const matches = matchAll(/(\r?\n){3,}/gm);
-
-		for (const match of matches) {
-			const start = doc.positionAt(match.index),
-				end = doc.positionAt(match.index + match[0].length);
-
-			const range = new vscode.Range(start, end);
-
-			diagnostics.push(new Diagnostic(range, 'Avoid excessive newlines', vscode.DiagnosticSeverity.Information, '\n\n'));
-		}
-	}
-
-	// No trailing newline
-	if (text !== '' && !text.endsWith('\n')) {
-		const position = doc.positionAt(text.length);
-
-		const range = new vscode.Range(position, position);
-
-		diagnostics.push(new Diagnostic(range, 'File should end with a newline', vscode.DiagnosticSeverity.Information, '\n'));
+		});
 	}
 
 	index.set(doc, diagnostics);
+
+	logger.log(`Resolved diagnostics for ${doc.fileName} in ${Date.now() - started}ms.`);
 
 	return diagnostics.length;
 }
@@ -281,7 +180,7 @@ function lintFolder(folder) {
 		});
 
 		const files = await vscode.workspace.findFiles(searchPath)
-			batch = Math.ceil(files.length / 20);
+		batch = Math.ceil(files.length / 20);
 
 		if (canceled) return;
 
@@ -356,13 +255,15 @@ export function registerDiagnostics(context) {
 	onAnyDocumentChange(context, refreshDiagnosticsWithTimeout);
 
 	// Quick fix provider
-	vscode.languages.registerCodeActionsProvider('lua', {
-		provideCodeActions(document, range) {
-			const action = index.resolveCodeAction(document, range);
+	vscode.languages.registerCodeActionsProvider(
+		{ scheme: 'file', language: 'lua' },
+		{
+			provideCodeActions(document, range) {
+				const action = index.resolveCodeAction(document, range);
 
-			return action ? [action] : [];
-		}
-	}, null, context.subscriptions);
+				return action ? [action] : [];
+			}
+		}, null, context.subscriptions);
 
 	// Commands
 	vscode.commands.registerCommand('vs-fivem.lintFolder', folder => {

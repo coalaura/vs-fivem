@@ -2,58 +2,6 @@ import vscode from 'vscode';
 
 import { matchAll } from '../helper/regexp.js';
 
-function extractColor(text) {
-    // Normal RGB(A) color
-    const rgba = text.match(/\d+(\.\d+)?/g);
-
-    if (rgba && rgba.length >= 3) {
-        const r = parseInt(rgba[0]),
-            g = parseInt(rgba[1]),
-            b = parseInt(rgba[2]);
-
-        let a = 255;
-
-        if (rgba.length === 4) {
-            if (rgba[3].includes('.')) {
-                a = Math.floor(parseFloat(rgba[3]) * 255);
-            } else {
-                a = parseInt(rgba[3]);
-            }
-
-            a = a ? a : 255;
-        }
-
-        return { r, g, b, a };
-    }
-
-    // Hex color
-    const hex = text.match(/[0-9a-z]{8}|[0-9a-z]{6}|[0-9a-z]{3}/i);
-
-    if (hex && hex.length === 1) {
-        const hexColor = hex[0];
-
-        let r, g, b, a = 255;
-
-        if (hexColor.length === 3) {
-            r = parseInt(hexColor[0] + hexColor[0], 16);
-            g = parseInt(hexColor[1] + hexColor[1], 16);
-            b = parseInt(hexColor[2] + hexColor[2], 16);
-        } else if (hexColor.length >= 6) {
-            r = parseInt(hexColor[0] + hexColor[1], 16);
-            g = parseInt(hexColor[2] + hexColor[3], 16);
-            b = parseInt(hexColor[4] + hexColor[5], 16);
-
-            if (hexColor.length === 8) {
-                a = parseInt(hexColor[6] + hexColor[7], 16);
-            }
-        }
-
-        return { r, g, b, a };
-    }
-
-    return false;
-}
-
 export default class ColorDecorator {
     constructor() {
         this.colors = {};
@@ -70,27 +18,28 @@ export default class ColorDecorator {
         this.decorations = [];
     }
 
-    add(rgba, range) {
-        const color = this.toString(rgba);
-
-        const data = this.colors[color] || { ranges: [], rgba };
+    add(hex, range) {
+        const data = this.colors[hex] || {
+            ranges: [],
+            bg: hex,
+            fg: this.findContrastColor(hex)
+        };
 
         data.ranges.push(range);
 
-        this.colors[color] = data;
+        this.colors[hex] = data;
     }
 
     render(editor) {
-        for (const color in this.colors) {
-            const data = this.colors[color],
-                ranges = data.ranges,
-                rgba = data.rgba;
+        for (const hex in this.colors) {
+            const data = this.colors[hex],
+                ranges = data.ranges;
 
             const decoration = vscode.window.createTextEditorDecorationType({
                 rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 
-                backgroundColor: color,
-                color: this.findContrastColor(rgba)
+                backgroundColor: data.bg,
+                color: data.fg
             });
 
             this.decorations.push(decoration);
@@ -104,8 +53,8 @@ export default class ColorDecorator {
 
     updateDecorations(editor, document) {
         const expressions = [
-            /(?<=['"])#([0-9a-f]{3,8})/gi,
-            /rgba?\(\d+, \d+, \d+(, \d+(\.\d+)?)?\)/gi,
+            /(?<=['"]#)[0-9a-f]{3,6}/gi,
+            /(?<=rgba?\()(\d+), ?(\d+), ?(\d+)(?=[^\)]*\))/gi,
         ];
 
         this.clear();
@@ -116,32 +65,46 @@ export default class ColorDecorator {
             const matches = matchAll(regex, text);
 
             for (const match of matches) {
-                const rgba = extractColor(match[0]);
+                let hex;
 
-                if (!rgba) continue;
+                if (match.length === 1) {
+                    hex = match[0];
+
+                    if (hex.length === 3) {
+                        hex = `#${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
+                    } else if (hex.length === 6) {
+                        hex = `#${hex}`;
+                    } else {
+                        continue;
+                    }
+                } else if (match.length === 4) {
+                    const r = parseInt(match[1]),
+                        g = parseInt(match[2]),
+                        b = parseInt(match[3]);
+
+                    hex = `#${r.toString(16)}${g.toString(16)}${b.toString(16)}`;
+                }
+
+                if (!hex || hex.length !== 7) continue;
 
                 const range = new vscode.Range(
                     document.positionAt(match.index),
                     document.positionAt(match.index + match[0].length)
                 );
 
-                this.add(rgba, range);
+                this.add(hex.toLowerCase(), range);
             }
         }
 
         this.render(editor);
     }
 
-    toString(rgba) {
-        if (rgba.a === 0) {
-            return 'rgba(0, 0, 0, 1)';
-        }
+    findContrastColor(hex) {
+        const r = parseInt(hex.slice(1, 3), 16),
+            g = parseInt(hex.slice(3, 5), 16),
+            b = parseInt(hex.slice(5, 7), 16);
 
-        return `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a / 255})`;
-    }
-
-    findContrastColor(rgba) {
-        if ((rgba.r * 0.299 + rgba.g * 0.587 + rgba.b * 0.114) > 186) return '#000000';
+        if ((r * 0.299 + g * 0.587 + b * 0.114) > 186) return '#000000';
 
         return '#ffffff';
     }
