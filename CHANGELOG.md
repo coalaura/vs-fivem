@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.1.4]
+- Debounced the hints provider to improve performance.
+
 ## [2.1.3]
 - Performance improvements when indexing and linting the workspace.
 
