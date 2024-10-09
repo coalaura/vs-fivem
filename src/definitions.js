@@ -18,19 +18,22 @@ export function buildFullIndex() {
             increment: 0
         });
 
-        const files = await vscode.workspace.findFiles('**/*.lua', '**/node_modules/**');
+        const files = await vscode.workspace.findFiles('**/*.lua', '**/node_modules/**'),
+            batch = Math.ceil(files.length / 20);
 
         let indexed = -1;
 
         function report() {
             indexed++;
 
-            const percentage = ((indexed / files.length) * 100).toFixed(1);
+            if (indexed % batch === 0) {
+                const percentage = ((indexed / files.length) * 100).toFixed(1);
 
-            progress.report({
-                message: percentage + '%',
-                increment: 100 / files.length
-            });
+                progress.report({
+                    message: percentage + '%',
+                    increment: 100 / files.length
+                });
+            }
         }
 
         for (const file of files) {

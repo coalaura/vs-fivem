@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.1.3]
+- Performance improvements when indexing and linting the workspace.
+
 ## [2.1.2]
 - Added even more hints for various natives.
 

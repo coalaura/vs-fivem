@@ -280,7 +280,8 @@ function lintFolder(folder) {
 			message: 'Collecting lua files...'
 		});
 
-		const files = await vscode.workspace.findFiles(searchPath);
+		const files = await vscode.workspace.findFiles(searchPath)
+			batch = Math.ceil(files.length / 20);
 
 		if (canceled) return;
 
@@ -289,14 +290,16 @@ function lintFolder(folder) {
 		for (const [index, file] of files.entries()) {
 			if (canceled) return;
 
-			const percentage = Math.floor((index / files.length) * 100);
-
 			const doc = await vscode.workspace.openTextDocument(file);
 
-			progress.report({
-				increment: 100 / files.length,
-				message: percentage + '% - ' + basename(doc.fileName) + '...'
-			});
+			if (index % batch === 0) {
+				const percentage = Math.floor((index / files.length) * 100);
+
+				progress.report({
+					increment: 100 / files.length,
+					message: percentage + '% - ' + basename(doc.fileName) + '...'
+				});
+			}
 
 			const foundIssues = refreshDiagnosticsNow(doc);
 

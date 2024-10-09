@@ -49,6 +49,8 @@ export function resolveAllNatives(context) {
             vscode.window.showWarningMessage('Failed to update natives list.');
         }
 
+        progress.report({ increment: 60 });
+
         const types = nativeIndex.natives.map(native => {
             const types = [];
 
