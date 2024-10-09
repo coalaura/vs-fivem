@@ -1,5 +1,6 @@
-import { resolveAllNatives } from './fetch-natives.js';
 import { buildFullIndex } from './definitions.js';
+import { initializeEventIndex } from './singletons/definition-index.js';
+import { initializeNativeIndex } from './singletons/native-index.js';
 
 import { registerColorDecorator } from './colors.js';
 import { registerCompletions } from './completions.js';
@@ -23,9 +24,10 @@ export function activate(context) {
 	activated = true;
 
 	// Fetch natives
-	resolveAllNatives(context);
+	initializeNativeIndex(context);
 
 	// Build index
+	initializeEventIndex(context);
 	buildFullIndex();
 
 	// Register features

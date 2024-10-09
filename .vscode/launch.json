@@ -12,7 +12,8 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--disable-extension=codeium.codeium",
-				"--disable-extension=vsls-contrib.gistfs"
+				"--disable-extension=vsls-contrib.gistfs",
+				"--log=trace"
 			]
 		},
 		{

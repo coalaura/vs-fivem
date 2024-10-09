@@ -67,6 +67,8 @@ export function luaTypeToBasicType(type) {
             return 'vector3';
         case 'function':
             return 'function';
+        case 'table':
+            return 'table';
         case 'hash':
         case 'vehicle':
         case 'entity':

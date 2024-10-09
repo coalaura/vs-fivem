@@ -41,203 +41,138 @@ function updateDecorationsIfNeeded(document) {
 
     timeout = setTimeout(() => {
         decorator.updateDecorations(activeEditor, document);
-    }, 300);
+    }, 500);
 }
 
 function registerProviders() {
     // SetPedConfigFlag & GetPedConfigFlag
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=[SG]etPedConfigFlag\s*\([^,]+?,\s*)\d+/g, text);
+    decorator.registerProvider({
+        'SetPedConfigFlag': 1,
+        'GetPedConfigFlag': 1
+    }, (func, arg) => {
+        const id = parseInt(arg.value);
 
-        return matches.map(match => {
-            const id = parseInt(match[0]),
-                flag = getPedConfigFlagName(id);
-
-            return {
-                hint: flag,
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getPedConfigFlagName(id);
     });
 
     // GetIsTaskActive
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=GetIsTaskActive\s*\([^,]+?,\s*)\d+/g, text);
+    decorator.registerProvider({
+        'GetIsTaskActive': 1
+    }, (func, arg) => {
+        const id = parseInt(arg.value);
 
-        return matches.map(match => {
-            const id = parseInt(match[0]),
-                task = getPedTaskName(id);
-
-            return {
-                hint: task,
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getPedTaskName(id);
     });
 
     // ForcePedMotionState
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=ForcePedMotionState\s*\([^,]+?,\s*)-?\d+/g, text);
+    decorator.registerProvider({
+        'ForcePedMotionState': 1
+    }, (func, arg) => {
+        const hash = parseInt(arg.value);
 
-        return matches.map(match => {
-            const hash = parseInt(match[0]),
-                state = getPedMotionStateName(hash);
-
-            return {
-                hint: state,
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getPedMotionStateName(hash);
     });
 
     // GetVehicleMod & SetVehicleMod & ToggleVehicleMod
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=(?:[GS]et|Toggle)VehicleMod\s*\([^,]+?,\s*)-?\d+/g, text);
+    decorator.registerProvider({
+        'GetVehicleMod': 1,
+        'SetVehicleMod': 1,
+        'ToggleVehicleMod': 1
+    }, (func, arg) => {
+        const id = parseInt(arg.value);
 
-        return matches.map(match => {
-            const id = parseInt(match[0]),
-                mod = getVehicleModName(id);
-
-            return {
-                hint: mod,
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getVehicleModName(id);
     });
 
     // SetVehicleWheelType
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=SetVehicleWheelType\s*\([^,]+?,\s*)\d+/g, text);
+    decorator.registerProvider({
+        'SetVehicleWheelType': 1
+    }, (func, arg) => {
+        const id = parseInt(arg.value);
 
-        return matches.map(match => {
-            const id = parseInt(match[0]),
-                type = getVehicleWheelTypeName(id);
-
-            return {
-                hint: type,
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getVehicleWheelTypeName(id);
     });
 
     // DisableControlAction & EnableControlAction
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=((Dis|En)ableControlAction|[SG]etControlNormal|Is(Disabled)?Control(Active|(Just)?(Pressed|Released)))\(\d, )\d+/g, text);
+    decorator.registerProvider({
+        'DisableControlAction': 1,
+        'EnableControlAction': 1
+    }, (func, arg) => {
+        const id = parseInt(arg.value);
 
-        return matches.map(match => {
-            const id = parseInt(match[0]),
-                control = getControlIdName(id);
-
-            return {
-                hint: control,
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getControlIdName(id);
     });
 
-    // Citizen.InvokeNative & N_
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=(InvokeNative|N_)\()0x[a-f0-9]+/gi, text);
+    // Citizen.InvokeNative
+    decorator.registerProvider({
+        'Citizen.InvokeNative': 0
+    }, (func, arg) => {
+        const offset = arg.value;
 
-        return matches.map(match => {
-            const offset = match[0],
-                name = getNativeNameFromOffset(offset);
-
-            return {
-                hint: name,
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getNativeNameFromOffset(offset);
     });
 
     // TaskLeaveVehicle & TaskLeaveAnyVehicle & TaskEnterVehicle
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=Task(Leave(Any)?)Vehicle\(([^,]+,\s*){2}|TaskEnterVehicle\(([^,]+,\s*){5})\d+/gi, text);
+    decorator.registerProvider({
+        'TaskLeaveVehicle': 2,
+        'TaskLeaveAnyVehicle': 2,
+        'TaskEnterVehicle': 5
+    }, (func, arg) => {
+        const flags = parseInt(arg.value);
 
-        return matches.map(match => {
-            const flags = parseInt(match[0]),
-                names = getVehicleTaskFlags(flags);
-
-            return {
-                hint: names.join(" | "),
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getVehicleTaskFlags(flags);
     });
 
     // ApplyForceToEntity & ApplyForceToEntityCenterOfMass
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=ApplyForceToEntity(CenterOfMass)?\(([^,]+,\s*))\d+/gi, text);
+    decorator.registerProvider({
+        'ApplyForceToEntity': 1,
+        'ApplyForceToEntityCenterOfMass': 1
+    }, (func, arg) => {
+        const type = parseInt(arg.value);
 
-        return matches.map(match => {
-            const type = parseInt(match[0]),
-                name = getForceTypeName(type);
-
-            return {
-                hint: name,
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getForceTypeName(type);
     });
 
     // Get...VehicleNode...
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=GetClosestVehicleNode(Id)?(WithHeading)?\(([^,]+,\s*){3}|GetNthClosestVehicleNode(Id)?(FavourDirection|WithHeading)?\(([^,]+,\s*){4}|GetNthClosestVehicleNodeFavourDirection\(([^,]+,\s*){7})\d+/gi, text);
+    decorator.registerProvider({
+        'GetClosestVehicleNode': 3,
+        'GetClosestVehicleNodeWithHeading': 3,
+        'GetNthClosestVehicleNode': 3,
+        'GetNthClosestVehicleNodeFavourDirection': 7,
+        'GetNthClosestVehicleNodeId': 4,
+        'GetNthClosestVehicleNodeIdWithHeading': 4,
+        'GetNthClosestVehicleNodeWithHeading': 4
+    }, (func, arg) => {
+        const flags = parseInt(arg.value);
 
-        return matches.map(match => {
-            const flags = parseInt(match[0]),
-                names = getVehicleNodeFlags(flags);
-
-            return {
-                hint: names.join(" | "),
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getVehicleNodeFlags(flags);
     });
 
     // AddExplosion
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=AddExplosion\(([^,]+,\s*){3})\d+/gi, text);
+    decorator.registerProvider({
+        'AddExplosion': 3
+    }, (func, arg) => {
+        const type = parseInt(arg.value);
 
-        return matches.map(match => {
-            const type = parseInt(match[0]),
-                name = getExplosionTypeName(type);
-
-            return {
-                hint: name,
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getExplosionTypeName(type);
     });
 
     // SetScriptGfxDrawOrder
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=SetScriptGfxDrawOrder\()\d+/gi, text);
+    decorator.registerProvider({
+        'SetScriptGfxDrawOrder': 0
+    }, (func, arg) => {
+        const type = parseInt(arg.value);
 
-        return matches.map(match => {
-            const type = parseInt(match[0]),
-                name = getScriptGfxDrawOrderName(type);
-
-            return {
-                hint: name,
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getScriptGfxDrawOrderName(type);
     });
 
     // SetTextFont
-    decorator.registerProvider(text => {
-        const matches = matchAll(/(?<=SetTextFont\()\d+/gi, text);
+    decorator.registerProvider({
+        'SetTextFont': 0
+    }, (func, arg) => {
+        const type = parseInt(arg.value);
 
-        return matches.map(match => {
-            const type = parseInt(match[0]),
-                name = getTextFontName(type);
-
-            return {
-                hint: name,
-                index: match.index + match[0].length
-            };
-        }).filter(match => match.hint);
+        return getTextFontName(type);
     });
 }
 

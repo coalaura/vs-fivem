@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parse as marked } from 'marked';
 
-import nativeIndex from '../singletons/native-index.js';
+import { getIndex } from '../singletons/native-index.js';
 
 export default class ViewProvider {
     constructor() {
@@ -21,7 +21,11 @@ export default class ViewProvider {
     sendSearchData() {
         if (!this.webview) return;
 
-        const results = (this.search ? nativeIndex.searchAll(this.search) : nativeIndex.natives).map(native => {
+        const index = getIndex();
+
+        if (!index) return;
+
+        const results = (this.search ? index.searchAll(this.search) : index.natives).map(native => {
             return {
                 name: native.name,
                 detail: native.detail(),
@@ -37,7 +41,7 @@ export default class ViewProvider {
             type: 'search',
             search: this.actualSearch,
             results: results,
-            total: nativeIndex.size()
+            total: index.size()
         });
     }
 
@@ -69,7 +73,7 @@ export default class ViewProvider {
                     this.sendSearchData();
                 }
             } else if (type === 'select') {
-                const native = nativeIndex.search(value);
+                const native = getIndex().search(value);
 
                 if (native) {
                     if (!this.viewer) {
@@ -97,7 +101,9 @@ export default class ViewProvider {
             }
         });
 
-        if (nativeIndex.size() > 0) {
+        const index = getIndex();
+
+        if (index && index.size() > 0) {
             this.sendSearchData();
         }
     }

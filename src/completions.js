@@ -1,7 +1,7 @@
 import vscode from 'vscode';
 
 import snippets from './data/snippets.js';
-import nativeIndex from './singletons/native-index.js';
+import { getIndex } from './singletons/native-index.js';
 import { getFileContext } from './helper/natives.js';
 
 export function registerCompletions(context) {
@@ -12,12 +12,14 @@ export function registerCompletions(context) {
 
             if (!word) return [];
 
+            const index = getIndex();
+
             const result = [];
 
             // Natives
             {
                 const ctx = getFileContext(document.fileName),
-                    natives = nativeIndex.findAllInContext(ctx, name => {
+                    natives = index.findAllInContext(ctx, name => {
                         return name.startsWith(word);
                     });
 

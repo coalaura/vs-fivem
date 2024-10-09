@@ -4,28 +4,44 @@ import { createNativeLuaName, resolveParametersAndReturns } from '../helper/nati
 import { applyNativeOverrides } from '../data/overrides.js';
 
 export default class Native {
-    constructor(json) {
-        this.context = json.apiset || 'client';
-        this.hash = json.hash;
-        this.namespace = json.ns;
+    constructor() {}
 
-        this.description = json.description ? json.description.trim().replace(/(?<=]\()#/g, 'https://docs.fivem.net/natives/?') : null;
+    static fromJSON(json) {
+        const native = new Native();
 
-        this.name = json.name ? createNativeLuaName(json.name) : json.hash;
-        this.cname = json.name || json.hash;
+        native.context = json.apiset || 'client';
+        native.hash = json.hash;
+        native.namespace = json.ns;
 
-        const { parameters, returns } = resolveParametersAndReturns(this.name, json);
+        native.description = json.description ? json.description.trim().replace(/(?<=]\()#/g, 'https://docs.fivem.net/natives/?') : null;
 
-        this.parameters = parameters;
-        this.returns = returns;
+        native.name = json.name ? createNativeLuaName(json.name) : json.hash;
+        native.cname = json.name || json.hash;
 
-        this.aliases = (json.aliases || []).map(alias => createNativeLuaName(alias)).filter(alias => alias !== this.name);
+        const { parameters, returns } = resolveParametersAndReturns(native.name, json);
 
-        this.example = json.examples ? json.examples.find(example => {
+        native.parameters = parameters;
+        native.returns = returns;
+
+        native.aliases = (json.aliases || []).map(alias => createNativeLuaName(alias)).filter(alias => alias !== native.name);
+
+        native.example = json.examples ? json.examples.find(example => {
             return example.lang === 'lua';
         }) : null;
 
-        applyNativeOverrides(this);
+        applyNativeOverrides(native);
+
+        return native;
+    }
+
+    static fromData(data) {
+        const native = new Native();
+
+        for (const key in data) {
+            native[key] = data[key];
+        }
+
+        return native;
     }
 
     documentation() {

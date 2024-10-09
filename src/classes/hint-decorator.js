@@ -1,11 +1,13 @@
 import vscode from 'vscode';
 
+import { parse, visitFunctions } from '../parser.js';
+
 export default class HintDecorator {
     constructor() {
         this.hints = {};
         this.decorations = [];
 
-        this.providers = [];
+        this.providers = {};
     }
 
     clear() {
@@ -50,8 +52,15 @@ export default class HintDecorator {
         }
     }
 
-    registerProvider(provider) {
-        this.providers.push(provider);
+    registerProvider(functions, provider) {
+        for (const func in functions) {
+            const index = functions[func];
+
+            this.providers[func] = {
+                index: index,
+                provider: provider
+            };
+        }
     }
 
     updateDecorations(editor, document) {
@@ -59,21 +68,30 @@ export default class HintDecorator {
 
         const text = document.getText();
 
-        for (const provider of this.providers) {
-            const matches = provider(text);
+        const { tree, error } = parse(text);
 
-            for (const match of matches) {
-                const hint = match.hint,
-                    index = match.index;
+        if (error) return;
 
-                const range = new vscode.Range(
-                    document.positionAt(index),
-                    document.positionAt(index)
-                );
+        visitFunctions(tree, (name, args, location) => {
+            const provider = this.providers[name];
 
-                this.add(hint, range);
-            }
-        }
+            if (!provider || args.length < provider.index) return;
+
+            const arg = args[provider.index],
+                hint = provider.provider(name, arg);
+
+            if (!hint) return;
+
+            const start = arg.start,
+                end = arg.end;
+
+            const range = new vscode.Range(
+                new vscode.Position(start.line - 1, start.column),
+                new vscode.Position(end.line - 1, end.column)
+            );
+
+            this.add(hint, range);
+        });
 
         this.render(editor);
     }
