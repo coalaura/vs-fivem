@@ -9,6 +9,7 @@ import { onAnyDocumentChange } from './helper/listeners.js';
 import { parse, visitFunctions } from './parser.js';
 import { showSyntaxErrors, excludeFilesRegex } from './helper/config';
 import { getDefaultValueForBasicType, luaTypeToBasicType, detectBasicTypeFromValue, convertValueToBasicType } from './helper/types.js';
+import logger from './singletons/logger.js';
 
 import DiagnosticIndex from './classes/diagnostic-index.js';
 import Diagnostic from './classes/diagnostic.js';
@@ -44,6 +45,8 @@ export function refreshDiagnosticsNow(doc) {
 	const excludeRgx = excludeFilesRegex();
 
 	if (excludeRgx && excludeRgx.test(doc.fileName)) return;
+
+	const started = Date.now();
 
 	const text = doc.getText(),
 		diagnostics = [];
@@ -131,6 +134,8 @@ export function refreshDiagnosticsNow(doc) {
 	}
 
 	index.set(doc, diagnostics);
+
+	logger.log(`Resolved diagnostics for ${doc.fileName} in ${Date.now() - started}ms.`);
 
 	return diagnostics.length;
 }

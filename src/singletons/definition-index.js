@@ -4,6 +4,7 @@ import { existsSync, readFileSync, writeFileSync, statSync, mkdirSync } from 'fs
 
 import { getFileContext } from '../helper/natives.js';
 import { matchAll } from '../helper/regexp.js';
+import logger from './logger.js';
 
 class DefinitionIndex {
     constructor(context) {
@@ -41,6 +42,8 @@ class DefinitionIndex {
                     this.delete(path);
                 }
             }
+
+            logger.log('Definition index loaded from disk.');
         } catch { }
     }
 

@@ -5,6 +5,7 @@ import axios from 'axios';
 
 import Native from '../classes/native.js';
 import { emit } from './event-bus.js';
+import logger from './logger.js';
 
 async function saveLoadJSON(url) {
     try {
@@ -19,10 +20,14 @@ async function saveLoadJSON(url) {
 }
 
 async function update(index) {
+    logger.log('Fetching natives list...');
+
     const [cfx, gta] = await Promise.all([
         await saveLoadJSON('https://runtime.fivem.net/doc/natives_cfx.json'),
         await saveLoadJSON('https://runtime.fivem.net/doc/natives.json')
     ]);
+
+    logger.log('Finished fetching natives list.');
 
     if (!cfx || !gta) {
         vscode.window.showWarningMessage('Failed to update natives list.');
@@ -82,6 +87,8 @@ class NativeIndex {
             if (Date.now() - data.time > NativeIndex.MaxAge) {
                 update(this);
             } else {
+                logger.log('Loaded natives from disk.');
+
                 emit('natives');
             }
         } catch {
