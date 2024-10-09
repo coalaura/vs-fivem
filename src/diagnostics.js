@@ -4,17 +4,15 @@ import vscode from 'vscode';
 import nativeIndex from './singletons/native-index.js';
 import { on } from './singletons/event-bus.js';
 import { matchAll } from './helper/regexp.js';
-import { extractAllFunctionCalls } from './helper/lua.js';
 import { getFileContext } from './helper/natives.js';
 import { onAnyDocumentChange } from './helper/listeners.js';
 import { parse, visitFunctions } from './parser.js';
-import { isLuaGLM, showPerformanceHints, showSyntaxErrors, excludeFilesRegex } from './helper/config';
+import { showSyntaxErrors, excludeFilesRegex } from './helper/config';
 import { getDefaultValueForBasicType, luaTypeToBasicType, detectBasicTypeFromValue, convertValueToBasicType } from './helper/types.js';
 
 import DiagnosticIndex from './classes/diagnostic-index.js';
 import Diagnostic from './classes/diagnostic.js';
 import Knowledge from './data/knowledge.js';
-import Performance from './data/performance.js';
 
 const index = new DiagnosticIndex();
 

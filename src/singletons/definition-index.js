@@ -1,7 +1,7 @@
 import vscode from 'vscode';
 
 import { getFileContext } from '../helper/natives.js';
-import { extractAllFunctionCalls } from '../helper/lua.js';
+import { parse, visitFunctions } from '../parser.js';
 
 const eventRegisters = [
     'RegisterNetEvent',
@@ -39,20 +39,24 @@ class DefinitionIndex {
 
         if (context !== 'client' && context !== 'server') return;
 
-        const calls = extractAllFunctionCalls(text, false, eventRegisters);
+        const { tree, error } = parse(text);
 
-        for (const call of calls) {
-            if (!call.arguments.length) continue;
+        if (error) return;
 
-            const event = call.arguments[0].value.replace(/^['"]|['"]$/gm, ''),
-                position = call.position;
+        visitFunctions(tree, (func, args, location) => {
+            if (!eventRegisters.includes(func)) return;
+
+            const resolved = args();
+
+            if (!resolved.length) return;
+
+            const event = resolved[0].replace(/^['"]|['"]$/gm, '');
 
             this.events[context][event] = {
                 file: name,
-                line: position.line,
-                character: position.character
+                range: location.range
             };
-        }
+        });
     }
 
     resolveDefinition(document, position) {
@@ -114,8 +118,8 @@ class DefinitionIndex {
 
     toLocation(fileName, event) {
         const file = vscode.Uri.file(fileName),
-            start = new vscode.Position(event.line - 1, event.character),
-            end = new vscode.Position(start.line, start.character + 1);
+            start = new vscode.Position(event.range.start.line - 1, event.range.start.character),
+            end = new vscode.Position(event.range.end.line - 1, event.range.end.character);
 
         return new vscode.Location(file, new vscode.Range(start, end));
     }

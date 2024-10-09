@@ -19,11 +19,16 @@ export default class FunctionCallVisitor extends LuaParserVisitor {
                 const first = names[0],
                     last = names[names.length - 1];
 
-                const args = () => this.getArguments(ctx.args ? ctx.args() : null);
+                const args = () => this.getArguments(ctx.args ? ctx.args() : []);
 
                 this.callback(name, args, {
                     start: first.symbol.start,
-                    end: last.symbol.stop + 1
+                    end: last.symbol.stop + 1,
+
+                    range: {
+                        start: {line: first.symbol.line, character: first.symbol.column},
+                        end: {line: last.symbol.line, character: last.symbol.column + 1}
+                    }
                 });
             }
         }
