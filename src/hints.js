@@ -20,6 +20,8 @@ import HintDecorator from './classes/hint-decorator.js';
 
 const decorator = new HintDecorator();
 
+let timeout;
+
 function updateDecorationsIfNeeded(document) {
     const activeEditor = vscode.window.activeTextEditor;
 
@@ -35,7 +37,11 @@ function updateDecorationsIfNeeded(document) {
         return;
     }
 
-    decorator.updateDecorations(activeEditor, document);
+    clearTimeout(timeout);
+
+    timeout = setTimeout(() => {
+        decorator.updateDecorations(activeEditor, document);
+    }, 300);
 }
 
 function registerProviders() {
