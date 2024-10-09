@@ -29,7 +29,7 @@ async function build() {
         entryPoints: ['./src/extension.js'],
         bundle: true,
         outfile: 'dist/extension.js',
-        external: ['vscode'],
+        external: ['vscode', 'antlr4'],
         format: 'cjs',
         platform: 'node',
         plugins: [

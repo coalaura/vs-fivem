@@ -7,7 +7,7 @@ import { matchAll } from './helper/regexp.js';
 import { extractAllFunctionCalls } from './helper/lua.js';
 import { getFileContext } from './helper/natives.js';
 import { onAnyDocumentChange } from './helper/listeners.js';
-import { parse } from './helper/luaparse.js';
+import { parse, visitFunctions } from './parser.js';
 import { isLuaGLM, showPerformanceHints, showSyntaxErrors, excludeFilesRegex } from './helper/config';
 import { getDefaultValueForBasicType, luaTypeToBasicType, detectBasicTypeFromValue, convertValueToBasicType } from './helper/types.js';
 
@@ -50,87 +50,36 @@ export function refreshDiagnosticsNow(doc) {
 	const text = doc.getText(),
 		diagnostics = [];
 
-	// Syntax errors
-	let ast;
+	const { tree, error } = parse(text);
 
-	try {
-		ast = parse(text, {
-            locations: true,
-            ranges: true,
-        });
-	} catch (e) {
-		if (Number.isInteger(e.index) && showSyntaxErrors()) {
-			const start = doc.positionAt(e.index),
-				end = doc.lineAt(start.line).range.end;
+	if (error) {
+		const { column, line, message } = error;
 
-			const range = new vscode.Range(start, end);
+		const start = doc.positionAt(line - 1, column),
+			end = doc.lineAt(line - 1).range.end,
+			range = new vscode.Range(start, end);
 
-			const message = e.message.replace(/^\[\d+:\d+]/, '');
+		diagnostics.push(new Diagnostic(range, message, vscode.DiagnosticSeverity.Error, false));
+	} else {
+		const context = getFileContext(doc.fileName);
 
-			diagnostics.push(new Diagnostic(range, message, vscode.DiagnosticSeverity.Error, false));
-		}
-	}
+		visitFunctions(tree, (name, args, location) => {
+			// General knowledge
+			const check = Knowledge[name] || false;
 
-	const context = getFileContext(doc.fileName),
-		calls = extractAllFunctionCalls(ast, text);
-
-	// General knowledge
-	for (const check of Knowledge) {
-		if (check.lua_glm && !isLuaGLM()) continue;
-
-		const regex = check.regex;
-
-		// Regex search
-		if (regex) {
-			const matches = matchAll(regex, text);
-
-			for (const match of matches) {
-				const start = doc.positionAt(match.index),
-					end = doc.positionAt(match.index + match[0].length),
+			if (check && (!check.match || check.match(args()))) {
+				const start = doc.positionAt(location.start),
+					end = doc.positionAt(location.end),
 					range = new vscode.Range(start, end);
 
-				const replacement = text.substring(match.index, match.index + match[0].length).replace(regex, check.replace),
-					severity = resolveSeverity(check.type);
+				const severity = resolveSeverity(check.type);
 
-				diagnostics.push(new Diagnostic(range, check.message, severity, replacement));
+				diagnostics.push(new Diagnostic(range, check.message, severity, check.replace));
 			}
-
-			continue;
-		}
-
-		// Function search
-		const name = check.func,
-			argumentRegex = check.argumentRegex;
-
-		const matchingCalls = calls.filter(call => {
-			return call.name === name && (!argumentRegex || call.rawArguments.match(argumentRegex));
 		});
-
-		for (const call of matchingCalls) {
-			const replacement = check.replace ? check.replace.replace(/\$0/g, call.rawArguments) : false,
-				severity = resolveSeverity(check.type);
-
-			diagnostics.push(new Diagnostic(call.range(doc), check.message, severity, replacement));
-		}
 	}
 
-	// Performance hints
-	if (showPerformanceHints()) {
-		for (const hint of Performance) {
-			const matches = matchAll(hint.bad.regex, text);
-
-			for (const match of matches) {
-				const start = doc.positionAt(match.index),
-					end = doc.positionAt(match.index + match[0].length),
-					range = new vscode.Range(start, end);
-
-				const message = `Use ${hint.good.code} instead of ${hint.bad.code} (${hint.bad.perf} -> ${hint.good.perf}).`;
-
-				diagnostics.push(new Diagnostic(range, message, vscode.DiagnosticSeverity.Hint, false));
-			}
-		}
-	}
-
+	/*
 	// Native aliases & hashes
 	for (const call of calls) {
 		const hash = nativeIndex.getNameFromHash(call.name);
@@ -235,6 +184,7 @@ export function refreshDiagnosticsNow(doc) {
 
 		diagnostics.push(new Diagnostic(range, 'File should end with a newline', vscode.DiagnosticSeverity.Information, '\n'));
 	}
+	*/
 
 	index.set(doc, diagnostics);
 
@@ -281,7 +231,7 @@ function lintFolder(folder) {
 		});
 
 		const files = await vscode.workspace.findFiles(searchPath)
-			batch = Math.ceil(files.length / 20);
+		batch = Math.ceil(files.length / 20);
 
 		if (canceled) return;
 

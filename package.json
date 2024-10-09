@@ -43,11 +43,6 @@
 		"configuration": {
 			"title": "VS-FiveM",
 			"properties": {
-				"vs-fivem.luaGLM": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "Support and diagnose [Lua-GLM](https://github.com/citizenfx/lua/blob/luaglm-dev/cfx/README.md) syntax like `+=`."
-				},
 				"vs-fivem.showSyntaxErrors": {
 					"type": "boolean",
 					"default": true,
@@ -62,11 +57,6 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "Show inline hints (e.g. PedConfigFlag resolve, etc.)."
-				},
-				"vs-fivem.showPerformanceHints": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Show performance hints (e.g. `table[#table - 1]` instead of `table.insert`, etc.)."
 				},
 				"vs-fivem.excludeFilesRegex": {
 					"type": "string",
@@ -193,6 +183,7 @@
 	},
 	"dependencies": {
 		"@coalaura/luaparse-glm": "^1.0.6",
+		"antlr4": "^4.13.2",
 		"luaparse": "^0.3.1",
 		"marked": "^4.3.0",
 		"node-fetch": "^2.6.6",
