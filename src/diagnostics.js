@@ -58,7 +58,7 @@ export function refreshDiagnosticsNow(doc) {
 			const { column, line, message } = error;
 
 			const start = new vscode.Position(line - 1, column),
-				end = doc.lineAt(line).range.end,
+				end = doc.lineAt(line - 1).range.end,
 				range = new vscode.Range(start, end);
 
 			diagnostics.push(new Diagnostic(range, message, vscode.DiagnosticSeverity.Error, false));
@@ -125,7 +125,9 @@ export function refreshDiagnosticsNow(doc) {
 
 					const arg = args[i];
 
-					if (arg.type !== 'any' && arg.type !== basicType) {
+					if (arg.type === 'any' || basicType === 'any') continue;
+
+					if (arg.type !== basicType) {
 						diagnostics.push(new Diagnostic(range(), `${native.name} expects ${basicType} instead of ${arg.type}.`, vscode.DiagnosticSeverity.Warning));
 					}
 				}
@@ -135,7 +137,7 @@ export function refreshDiagnosticsNow(doc) {
 
 	index.set(doc, diagnostics);
 
-	logger.log(`Resolved diagnostics for ${doc.fileName} in ${Date.now() - started}ms.`);
+	logger.log(`Resolved diagnostics for ${basename(doc.fileName)} in ${Date.now() - started}ms.`);
 
 	return diagnostics.length;
 }

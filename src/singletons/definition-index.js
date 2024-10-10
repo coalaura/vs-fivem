@@ -10,7 +10,7 @@ class DefinitionIndex {
     constructor(context) {
         this.version = 1;
 
-        this.directory = context.storagePath;
+        this.directory = context.storagePath || context.globalStoragePath;
         this.path = join(this.directory, 'events.json');
 
         this.files = {};

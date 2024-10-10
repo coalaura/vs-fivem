@@ -58,7 +58,7 @@ class NativeIndex {
     static MaxAge = 24 * 60 * 60 * 1000;
 
     constructor(context) {
-        this.directory = context.storagePath;
+        this.directory = context.storagePath || context.globalStoragePath;
         this.path = join(this.directory, 'natives.json');
 
         this.clear();

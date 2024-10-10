@@ -1,5 +1,11 @@
 # Change Log
 
+## [3.0.1]
+- Fixed extension breaking in non-workspace environments.
+- Fixed issues where native would not accept types even though it expects `any`.
+- Properly evaluate literal expressions.
+- Fixed various issues caused by the rewrite.
+
 ## [3.0.0]
 - Rewrote most of the codebase.
 - Major performance improvements.
