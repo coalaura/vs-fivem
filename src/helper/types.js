@@ -2,6 +2,8 @@
 // Lua Type: Normalized type that is used in the lua code
 // Basic Type: Basic types only (integer, number, boolean, string, nil, any, vector3)
 
+import logger from "../singletons/logger";
+
 export function nativeTypeToLuaType(type) {
     type = type.toLowerCase();
 
@@ -42,7 +44,7 @@ export function nativeTypeToLuaType(type) {
             return 'any';
     }
 
-    console.warn(`[nativeTypeToLuaType] Unknown native-type: ${type}`);
+    logger.log(`[nativeTypeToLuaType] Unknown native-type: ${type}`);
 
     return 'any';
 }
@@ -83,7 +85,7 @@ export function luaTypeToBasicType(type) {
             return 'integer';
     }
 
-    console.warn(`[luaTypeToBasicType] Unknown lua-type: ${type}`);
+    logger.log(`[luaTypeToBasicType] Unknown lua-type: ${type}`);
 
     return 'any';
 }
@@ -110,7 +112,7 @@ export function getDefaultValueForBasicType(type) {
             return 'function()end';
     }
 
-    console.warn(`[getDefaultValueForBasicType] Unknown lua-type: ${type}`);
+    logger.log(`[getDefaultValueForBasicType] Unknown lua-type: ${type}`);
 
     return 'false';
 }
@@ -143,7 +145,7 @@ export function convertValueToBasicType(type, value) {
             return value;
     }
 
-    console.warn(`[convertValueToBasicType] Unknown basic-type: ${type}`);
+    logger.log(`[convertValueToBasicType] Unknown basic-type: ${type}`);
 
     return 'false';
 }
