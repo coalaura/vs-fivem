@@ -3,6 +3,7 @@
 ## [3.0.2]
 - Fixed argument issues not highlighting the right location.
 - Improved indexing speed and skip indexing in non-workspace environments.
+- Fixed logical expression with variables in arguments always resulting in a `boolean`.
 
 ## [3.0.1]
 - Fixed extension breaking in non-workspace environments.
