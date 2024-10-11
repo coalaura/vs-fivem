@@ -1,5 +1,8 @@
 # Change Log
 
+## [3.0.2]
+- Fixed argument issues not highlighting the right location.
+
 ## [3.0.1]
 - Fixed extension breaking in non-workspace environments.
 - Fixed issues where native would not accept types even though it expects `any`.
