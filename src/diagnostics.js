@@ -113,7 +113,20 @@ export function refreshDiagnosticsNow(doc) {
 
 				// Wrong number of arguments
 				if (expected !== actual) {
-					diagnostics.push(new Diagnostic(range(), `${native.name} expects ${expected} arguments instead of ${actual}.`, vscode.DiagnosticSeverity.Warning));
+					let rng;
+
+					if (actual > 0) {
+						const start = args[0].start,
+							end = args[actual - 1].end;
+
+						rng = new vscode.Range(start.line - 1, start.column, end.line - 1, end.column);
+					} else {
+						const end = location.end;
+
+						rng = new vscode.Range(end.line - 1, end.column, end.line - 1, end.column + 2);
+					}
+
+					diagnostics.push(new Diagnostic(rng, `${native.name} expects ${expected} arguments instead of ${actual}.`, vscode.DiagnosticSeverity.Warning));
 
 					return;
 				}
@@ -128,7 +141,11 @@ export function refreshDiagnosticsNow(doc) {
 					if (arg.type === 'any' || basicType === 'any') continue;
 
 					if (arg.type !== basicType) {
-						diagnostics.push(new Diagnostic(range(), `${native.name} expects ${basicType} instead of ${arg.type}.`, vscode.DiagnosticSeverity.Warning));
+						const start = arg.start,
+							end = arg.end,
+							rng = new vscode.Range(start.line - 1, start.column, end.line - 1, end.column);
+
+						diagnostics.push(new Diagnostic(rng, `${native.name} expects ${basicType} instead of ${arg.type}.`, vscode.DiagnosticSeverity.Warning));
 					}
 				}
 			}
