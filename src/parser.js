@@ -291,6 +291,10 @@ function evaluateExpression(node) {
                 const left = evaluateType(node.left),
                     right = evaluateType(node.right);
 
+                if (!left || !right) {
+                    return false;
+                }
+
                 if (operator === 'and') {
                     return {
                         type: 'boolean',
