@@ -1,5 +1,6 @@
-import { relative, basename } from 'path';
+import { basename, join } from 'path';
 import vscode from 'vscode';
+import glob from 'fast-glob';
 
 import { getIndex } from './singletons/native-index.js';
 import { on } from './singletons/event-bus.js';
@@ -172,15 +173,7 @@ function refreshDiagnosticsWithTimeout(doc) {
 }
 
 function lintFolder(folder) {
-	const workspaceFolder = vscode.workspace.getWorkspaceFolder(folder);
-
-	if (!workspaceFolder) return;
-
-	const workspaceFolderPath = workspaceFolder.uri.path;
-
-	const searchFolder = relative(workspaceFolderPath, folder.path).replace(/\[|\]/g, '[$&]');
-
-	const searchPath = (searchFolder ? searchFolder + '/' : '') + '**/*.lua';
+	const folderPath = folder.fsPath;
 
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,
@@ -198,30 +191,40 @@ function lintFolder(folder) {
 			message: 'Collecting lua files...'
 		});
 
-		const files = await vscode.workspace.findFiles(searchPath)
-		batch = Math.ceil(files.length / 20);
+		const files = await glob('**/*.lua', {
+			cwd: folderPath,
+			ignore: ['**/node_modules/**', '**/.git/**'],
+		});
+
+		const batch = Math.ceil(files.length / 20);
 
 		if (canceled) return;
 
-		let issues = 0;
+		let issues = 0,
+			linted = 0;
 
-		for (const [index, file] of files.entries()) {
-			if (canceled) return;
+		function report() {
+			linted++;
 
-			const doc = await vscode.workspace.openTextDocument(file);
-
-			if (index % batch === 0) {
-				const percentage = Math.floor((index / files.length) * 100);
+			if (linted % batch === 0) {
+				const percentage = ((linted / files.length) * 100).toFixed(1);
 
 				progress.report({
-					increment: 100 / files.length,
-					message: percentage + '% - ' + basename(doc.fileName) + '...'
+					message: percentage + '%',
+					increment: 100 / files.length
 				});
 			}
+		}
 
-			const foundIssues = refreshDiagnosticsNow(doc);
+		for (const path of files) {
+			if (canceled) return;
+
+			const doc = await vscode.workspace.openTextDocument(join(folderPath, path)),
+				foundIssues = refreshDiagnosticsNow(doc);
 
 			if (foundIssues) issues += foundIssues;
+
+			report();
 		}
 
 		if (issues === 0) {
@@ -240,14 +243,28 @@ function fixAllDiagnostics() {
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,
 		title: 'Fixing diagnostics',
-	}, async (progress) => {
-		for (const [index, uri] of uris.entries()) {
-			const percentage = Math.floor((index / uri.length) * 100);
+	}, async (progress, token) => {
+		let canceled = false;
+
+		token.onCancellationRequested(() => {
+			canceled = true;
+		});
+
+		let fixed = 0;
+
+		function report() {
+			fixed++;
+
+			const percentage = ((fixed / uris.length) * 100).toFixed(1);
 
 			progress.report({
-				increment: 100 / uri.length,
-				message: percentage + '%'
+				message: percentage + '%',
+				increment: 100 / uris.length
 			});
+		}
+
+		for (const uri of uris) {
+			if (canceled) return;
 
 			const document = await vscode.workspace.openTextDocument(uri);
 
@@ -265,7 +282,11 @@ function fixAllDiagnostics() {
 			}
 
 			await document.save();
+
+			report();
 		}
+
+		vscode.window.showInformationMessage(`Fixed ${fixed} issue${fixed > 1 ? 's' : ''}.`);
 	});
 }
 

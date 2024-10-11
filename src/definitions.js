@@ -2,6 +2,7 @@ import vscode from 'vscode';
 
 import { readFile } from 'fs/promises';
 import glob from 'fast-glob';
+import { join } from 'path';
 
 import { eventDefinitions } from './helper/config.js';
 import { getIndex } from './singletons/definition-index.js';
@@ -24,7 +25,13 @@ export function buildFullIndex() {
         location: vscode.ProgressLocation.Window,
         cancellable: false,
         title: 'Indexing Workspace'
-    }, async (progress) => {
+    }, async (progress, token) => {
+        let canceled = false;
+
+		token.onCancellationRequested(() => {
+			canceled = true;
+		});
+
         progress.report({
             message: 'Collecting',
             increment: 0
@@ -32,14 +39,18 @@ export function buildFullIndex() {
 
         const _start = Date.now();
 
+        const folderPath = workspaces[0].uri.fsPath;
+
         const files = await glob('**/*.lua', {
-            cwd: workspaces[0].uri.fsPath,
+            cwd: folderPath,
             ignore: ['**/node_modules/**', '**/.git/**'],
         });
 
+        if (canceled) return;
+
         const batch = Math.ceil(files.length / 20);
 
-        let indexed = -1;
+        let indexed = 0;
 
         function report() {
             indexed++;
@@ -57,7 +68,9 @@ export function buildFullIndex() {
         const index = getIndex();
 
         for (const path of files) {
-            index.rebuild(path, false);
+            if (canceled) return;
+
+            index.rebuild(join(folderPath, path), false);
 
             report();
         }
