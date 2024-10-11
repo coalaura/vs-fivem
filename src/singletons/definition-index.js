@@ -10,8 +10,8 @@ class DefinitionIndex {
     constructor(context) {
         this.version = 1;
 
-        this.directory = context.storagePath || context.globalStoragePath;
-        this.path = join(this.directory, 'events.json');
+        this.directory = context.storagePath;
+        this.path = this.directory ? join(this.directory, 'events.json') : false;
 
         this.files = {};
         this.events = {
@@ -21,7 +21,9 @@ class DefinitionIndex {
     }
 
     load() {
-        if (!existsSync(this.path)) {
+        if (!this.path || !existsSync(this.path)) {
+            logger.log('Definition index not found on disk.');
+
             return;
         }
 
@@ -48,6 +50,10 @@ class DefinitionIndex {
     }
 
     store() {
+        if (!this.path) {
+            return;
+        }
+
         if (!existsSync(this.directory)) {
             mkdirSync(this.directory, { recursive: true });
         }

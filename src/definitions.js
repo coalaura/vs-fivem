@@ -1,15 +1,24 @@
 import vscode from 'vscode';
 
 import { readFile } from 'fs/promises';
+import glob from 'fast-glob';
 
 import { eventDefinitions } from './helper/config.js';
 import { getIndex } from './singletons/definition-index.js';
-import { clear } from 'console';
+import logger from './singletons/logger.js';
 
 let timeouts = {};
 
 export function buildFullIndex() {
     if (!eventDefinitions()) return;
+
+    const workspaces = vscode.workspace.workspaceFolders;
+
+    if (!workspaces || !workspaces.length) {
+        logger.log('Skipped workspace indexing as no workspace is open.');
+
+        return;
+    }
 
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Window,
@@ -21,8 +30,14 @@ export function buildFullIndex() {
             increment: 0
         });
 
-        const files = await vscode.workspace.findFiles('**/*.lua', '**/{node_modules,.git}/**'),
-            batch = Math.ceil(files.length / 20);
+        const _start = Date.now();
+
+        const files = await glob('**/*.lua', {
+            cwd: workspaces[0].uri.fsPath,
+            ignore: ['**/node_modules/**', '**/.git/**'],
+        });
+
+        const batch = Math.ceil(files.length / 20);
 
         let indexed = -1;
 
@@ -41,13 +56,15 @@ export function buildFullIndex() {
 
         const index = getIndex();
 
-        for (const file of files) {
-            index.rebuild(file.fsPath, false);
+        for (const path of files) {
+            index.rebuild(path, false);
 
             report();
         }
 
         index.store();
+
+        logger.log(`Indexed ${files.length} files in ${Date.now() - _start}ms.`);
 
         progress.report({ increment: 100 });
     });
