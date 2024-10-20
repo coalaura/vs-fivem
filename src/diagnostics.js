@@ -100,7 +100,7 @@ export function refreshDiagnosticsNow(doc) {
 			const alias = index.getNameFromAlias(name);
 
 			if (alias) {
-				diagnostics.push(new Diagnostic(range(), `\`${name}\` is deprecated, use \`${alias}\` instead.`, vscode.DiagnosticSeverity.Warning, alias));
+				diagnostics.push(new Diagnostic(range(), `\`${name}\` is deprecated, use \`${alias}\` instead.`, vscode.DiagnosticSeverity.Hint, alias));
 
 				return;
 			}
@@ -127,7 +127,7 @@ export function refreshDiagnosticsNow(doc) {
 						rng = new vscode.Range(end.line - 1, end.column, end.line - 1, end.column + 2);
 					}
 
-					diagnostics.push(new Diagnostic(rng, `${native.name} expects ${expected} arguments instead of ${actual}.`, vscode.DiagnosticSeverity.Warning));
+					diagnostics.push(new Diagnostic(rng, `${native.name} expects ${expected} arguments instead of ${actual}.`, vscode.DiagnosticSeverity.Error));
 
 					return;
 				}
@@ -146,7 +146,7 @@ export function refreshDiagnosticsNow(doc) {
 							end = arg.end,
 							rng = new vscode.Range(start.line - 1, start.column, end.line - 1, end.column);
 
-						diagnostics.push(new Diagnostic(rng, `${native.name} expects ${basicType} instead of ${arg.type}.`, vscode.DiagnosticSeverity.Warning));
+						diagnostics.push(new Diagnostic(rng, `${native.name} expects ${basicType} instead of ${arg.type}.`, vscode.DiagnosticSeverity.Error));
 					}
 				}
 			}
