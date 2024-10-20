@@ -1,5 +1,8 @@
 # Change Log
 
+## [3.0.4]
+- Updated diagnostic severities to make more sense.
+
 ## [3.0.3]
 - Fixed fix all and lint folder not working properly at times.
 
