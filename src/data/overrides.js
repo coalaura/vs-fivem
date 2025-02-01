@@ -5,11 +5,6 @@ export function applyNativeOverrides(native) {
             native.parameters[2].type = 'boolean';
 
             break;
-        case 'DrawMarker':
-            native.parameters[21].type = 'boolean';
-            native.parameters[22].type = 'boolean';
-
-            break;
         case 'SetTrailerLegsLowered':
             native.parameters = [
                 {
