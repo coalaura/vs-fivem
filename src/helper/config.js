@@ -12,6 +12,26 @@ export function showSyntaxErrors() {
     return get('showSyntaxErrors');
 }
 
+export function provideCodeActions() {
+    return get('provideCodeActions');
+}
+
+export function provideDiagnostics() {
+    return get('provideDiagnostics');
+}
+
+export function disableAllDiagnostics() {
+    return get('disableAllDiagnostics');
+}
+
+export function diagnosticDebounce() {
+    const val = get('diagnosticDebounce');
+
+    if (!val) return 750;
+
+    return val;
+}
+
 export function excludeFilesRegex() {
     let val = get('excludeFilesRegex')?.trim();
 

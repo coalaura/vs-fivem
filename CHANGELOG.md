@@ -1,5 +1,9 @@
 # Change Log
 
+## [3.0.5]
+- Introduces a bunch of new configuration options to optimize performance and tune certain features.
+- Some minor bug fixes.
+
 ## [3.0.4]
 - Updated diagnostic severities to make more sense.
 
